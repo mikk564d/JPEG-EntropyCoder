@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace StegaProject {
+namespace JPEG_EntropyCoder.Components {
     class DCComponent : ValueComponent {
         public DCComponent(string huffmanTreePath, string huffmanLeafHexValue, string amplitude) 
             : base(huffmanTreePath, huffmanLeafHexValue, amplitude) { }

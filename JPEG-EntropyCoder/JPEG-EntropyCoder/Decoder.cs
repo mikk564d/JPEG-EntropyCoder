@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using HuffmanTreeBuilder;
 
-namespace StegaProject {
+namespace Components {
     public class Decoder {
 
         enum HuffmanTable {

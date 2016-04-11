@@ -5,7 +5,7 @@ using System.IO;
 using System.Security;
 using JPEG_EntropyCoder;
 
-namespace StegaProject {
+namespace Components {
     /// <summary>
     /// This class holds methods to process a JPEG file. The class is able to load and save a JPEG file aswell as gettting markers' data, compressed image data and all data from it.
     /// </summary>

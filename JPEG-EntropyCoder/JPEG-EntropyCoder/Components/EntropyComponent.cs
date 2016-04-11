@@ -1,10 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace StegaProject {
+﻿
+namespace JPEG_EntropyCoder.Components {
      public abstract class EntropyComponent {
         protected EntropyComponent(string huffmanTreePath, string huffmanLeafHexValue, string amplitude) {
             HuffmanTreePath = huffmanTreePath;
