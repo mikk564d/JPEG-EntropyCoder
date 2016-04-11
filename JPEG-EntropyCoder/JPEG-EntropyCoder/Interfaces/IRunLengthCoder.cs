@@ -1,10 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using JPEG_EntropyCoder.Components;
 
 namespace JPEG_EntropyCoder {
-    interface IRunLengthCoder {
+    public interface IRunLengthCoder {
+        void Encode(EntropyComponent entropyComponent);
+        EntropyComponent Decode();
     }
 }

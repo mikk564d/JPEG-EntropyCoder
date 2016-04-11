@@ -1,6 +1,6 @@
 ﻿
 namespace JPEG_EntropyCoder {
-    interface IJPEGFileHandler {
+   public interface IJPEGFileHandler {
         string DQT { get; set; }
         string DHT { get; set; }
         string SOF { get; set; }

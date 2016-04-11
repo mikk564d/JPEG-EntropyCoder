@@ -1,14 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Components;
+﻿using System.Collections.Generic;
+using JPEG_EntropyCoder.Components;
 
 namespace JPEG_EntropyCoder.Interfaces {
-    interface IEntropyCoder {
-        List<EntropyComponent> 
-        void Encoder(string compressedImage);
-        Decoder();
+    public interface IEntropyCoder {
+        List<EntropyComponent> EntropyComponents { get; set; }
+        void Encode();
+        void Decode();
     }
 }

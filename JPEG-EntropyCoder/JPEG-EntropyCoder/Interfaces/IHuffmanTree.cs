@@ -5,9 +5,9 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace JPEG_EntropyCoder {
-    interface IHuffmanTree {
+    public interface IHuffmanTree {
+        string DHT { get; }
         string Find(string treePath);
         string PrintTree();
-        string DHT { get; }
     }
 }
