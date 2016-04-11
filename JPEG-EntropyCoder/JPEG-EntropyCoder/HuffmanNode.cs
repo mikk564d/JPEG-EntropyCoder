@@ -13,8 +13,8 @@ namespace JPEG_EntropyCoder {
         public int lvl { get; protected set; }
         public bool leaf { get; protected set; }
 
-        public HuffmanTree left;
-        public HuffmanTree right;
+        public HuffmanNode left;
+        public HuffmanNode right;
 
         public HuffmanNode(string DHT) : this("", DHT) {
 
@@ -31,8 +31,8 @@ namespace JPEG_EntropyCoder {
             }
 
             if (!makeMeLeaf() && this.lvl < 16) {
-                this.left = new HuffmanTree(binaddr + "0", DHT);
-                this.right = new HuffmanTree(binaddr + "1", DHT);
+                this.left = new HuffmanNode(binaddr + "0", DHT);
+                this.right = new HuffmanNode(binaddr + "1", DHT);
             }
         }
 
