@@ -44,10 +44,10 @@
     <Compile Include="Components\ValueComponent.cs" />
     <Compile Include="EntropyCoder.cs" />
     <Compile Include="Components\DCComponent.cs" />
-    <Compile Include="Decoder.cs" />
     <Compile Include="Components\EntropyComponent.cs" />
     <Compile Include="Components\EOBComponent.cs" />
     <Compile Include="Exceptions\BinaryPathNotFoundInHuffmanTreeException.cs" />
+    <Compile Include="Exceptions\MarkerNotFoundException.cs" />
     <Compile Include="HuffmanNode.cs" />
     <Compile Include="HuffmanTree.cs" />
     <Compile Include="Interfaces\IEntropyCoder.cs" />

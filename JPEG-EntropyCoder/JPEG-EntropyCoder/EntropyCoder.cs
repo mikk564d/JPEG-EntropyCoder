@@ -2,14 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
-using Components;
 using JPEG_EntropyCoder.Components;
 using JPEG_EntropyCoder.Exceptions;
 using JPEG_EntropyCoder.Interfaces;
 
 namespace JPEG_EntropyCoder {
-    class EntropyCoder : IEntropyCoder {
+    public class EntropyCoder : IEntropyCoder {
         public EntropyCoder(string path) {
             RunLengthCoder = new RunLengthCoder();
             HuffmanTrees = new List<HuffmanTree>();
@@ -32,7 +30,7 @@ namespace JPEG_EntropyCoder {
         public List<EntropyComponent> EntropyComponents { get; set; }
 
         private void BuildHuffmanTrees(JPEGFileHandler fileHandler) {
-            string DHT = fileHandler.DHT();
+            string DHT = fileHandler.DHT;
 
             List<string> DHTs = new List<string>();
             int index = 0;
@@ -57,13 +55,13 @@ namespace JPEG_EntropyCoder {
                 Console.WriteLine(dht);
             }
 
-            foreach (string table in DHTs) {
-                HuffmanTrees.Add(new HuffmanTree(table));
-            }
+            //foreach (string table in DHTs) {
+            //    HuffmanTrees.Add(new HuffmanTree(table));
+            //}
         }
 
         private void GetBinaryData(JPEGFileHandler extractor) {
-            string data = extractor.GetCompressedImageData();
+            string data = extractor.CompressedImage;
             StringBuilder sBuilder = new StringBuilder();
 
             for (int i = 0; i < data.Length; i++) {
@@ -74,7 +72,7 @@ namespace JPEG_EntropyCoder {
         }
 
         public void Encode() {
-            FileHandler.CompressedData = GetReEncodedData();
+            FileHandler.CompressedImage = GetReEncodedData();
         }
 
         public void Decode() {
@@ -83,7 +81,7 @@ namespace JPEG_EntropyCoder {
         }
 
         public void Save(string path) {
-            FileHandler.SaveImage(path);
+            FileHandler.SaveFile(path);
         }
 
 

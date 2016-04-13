@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Globalization;
 using System.IO;
-using JPEG_EntropyCoder.CustomExceptions;
+using JPEG_EntropyCoder.Exceptions;
 
 namespace JPEG_EntropyCoder {
     /// <summary>
