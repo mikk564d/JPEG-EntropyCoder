@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 
 namespace JPEG_EntropyCoder {
-    class HuffmanTree : IHuffmanTree {
+    public class HuffmanTree : IHuffmanTree {
         public static LinkedList<LinkedList<string>> DHTLists; //Contains the values for each level of the tree
 
         public string DHT { get; }
@@ -26,8 +26,8 @@ namespace JPEG_EntropyCoder {
 
             HuffmanTree.DHTLists = new LinkedList<LinkedList<string>> { };
             string[] dhtsplit = DHT.Split(' ');
-            int valueIndex = 17;
-            for (int i = 0; i < 17; i++) {
+            int valueIndex = 16;
+            for (int i = 0; i < 16; i++) {
 
                 int dhtamount = Convert.ToInt32(dhtsplit[i].ToString(), 16);
 

@@ -15,7 +15,7 @@ namespace JPEG_EntropyCoder {
             FileHandler = new JPEGFileHandler(path);
 
             BuildHuffmanTrees(FileHandler);
-            GetBinaryData(FileHandler);
+            //GetBinaryData(FileHandler);
         }
 
         enum HuffmanTable {
@@ -30,7 +30,8 @@ namespace JPEG_EntropyCoder {
         public List<EntropyComponent> EntropyComponents { get; set; }
 
         private void BuildHuffmanTrees(JPEGFileHandler fileHandler) {
-            string DHT = fileHandler.DHT;
+            string[] DHTValues = fileHandler.DHT.Split(' ');
+
 
             List<string> DHTs = new List<string>();
             int index = 0;
@@ -39,25 +40,25 @@ namespace JPEG_EntropyCoder {
                 int count = 0;
                 index++;
                 int upperLimit = index + 16;
-                for ( ;index < upperLimit; index += 2) {
-                    string currentByte = DHT[index].ToString() + DHT[index + 1].ToString();
-                    dht += currentByte;
+                for ( ;index < upperLimit; index++) {
+                    string currentByte = DHTValues[index];
+                    dht += currentByte + " ";
                     count += Convert.ToInt32(currentByte, 16);
                 }
                 upperLimit = count + index;
-                for (; index < upperLimit; index += 2) {
-                    dht += DHT[index] + DHT[index + 1];
+                for (; index < upperLimit; index++) {
+                    dht += DHTValues[index] + " ";
                 }
-                DHTs[i] = dht;
+                DHTs.Add(dht);
             }
 
             foreach (string dht in DHTs) {
                 Console.WriteLine(dht);
             }
 
-            //foreach (string table in DHTs) {
-            //    HuffmanTrees.Add(new HuffmanTree(table));
-            //}
+            foreach (string table in DHTs) {
+                HuffmanTrees.Add(new HuffmanTree(table));
+            }
         }
 
         private void GetBinaryData(JPEGFileHandler extractor) {
