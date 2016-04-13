@@ -1,23 +1,21 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
-using System.Security;
-using JPEG_EntropyCoder;
+using JPEG_EntropyCoder.CustomExceptions;
 
-namespace Components {
+namespace JPEG_EntropyCoder {
     /// <summary>
     /// This class holds methods to process a JPEG file. The class is able to load and save a JPEG file aswell as gettting markers' data, compressed image data and all data from it.
     /// </summary>
-    public class JPEGFileHandler {
-        private const byte MARKERLENGTH = 2;
-        private const byte FIELDLENGTH = 2;
-        private const string DQTMARKER = "FFDB";
-        private const string DHTMARKER = "FFC4";
-        private const string DRIMARKER = "FFDD";
-        private const string SOFMARKER = "FFC0";
-        private const string SOSMARKER = "FFDA";
-        private const string EOIMARKER = "FFD9";
+    public class JPEGFileHandler : IJPEGFileHandler {
+        private const byte MARKER_LENGTH = 2;
+        private const byte LENGTH_OF_FIELD_LENGTH = 2;
+        private const string DQT_MARKER = "FF DB";
+        private const string DHT_MARKER = "FF C4";
+        private const string SOF0_MARKER = "FF C0";
+        private const string SOF2_MARKER = "FF C2";
+        private const string SOS_MARKER = "FF DA";
+        private const string EOI_MARKER = "FF D9";
 
         private byte[] fileBytes;
 
@@ -29,100 +27,142 @@ namespace Components {
             return s.Replace("-", " ");
         }
 
-        private int FindMarker(string marker, int startIndex = 0) {
+        private int FindMarkerIndex(string marker, int startIndex = 0) {
             int index = startIndex;
-            
-            while ( index != -1 && index < fileBytes.Length - 1 &&
-                    RemoveDashes( BitConverter.ToString( fileBytes, index, MARKERLENGTH ) ) != marker ) {
+            string nextTwoBytes = ReplaceDashesWithSpaces( BitConverter.ToString( fileBytes, index, MARKER_LENGTH ) );
+
+            while ( nextTwoBytes != marker && nextTwoBytes != EOI_MARKER ) {
                 index++;
+                nextTwoBytes = ReplaceDashesWithSpaces( BitConverter.ToString( fileBytes, index, MARKER_LENGTH ) );
             }
+                
+            if (nextTwoBytes == EOI_MARKER)
+                throw new MarkerNotFoundException("Marker was not found in JPEG file.", marker);
 
-            if ( index < fileBytes.Length - 1 ) {
-                return index;
-            }
-
-            return -1;
+            return index;
         }
 
-        private int FindDataStart(string marker, int startIndex = 0) {
-            int index = startIndex;
+        private int CalculateLengthOfField( string marker, int startIndex = 0 ) {
+            int lengthOfFieldIndex = FindMarkerIndex( marker, startIndex ) + MARKER_LENGTH;
 
-            index = FindMarker(marker, startIndex);
-            
-            if ( index != -1 ) {
-                return index + ( MARKERLENGTH + FIELDLENGTH );
-            }
-
-            return -1;
+            return int.Parse( RemoveDashes( BitConverter.ToString( fileBytes, lengthOfFieldIndex, LENGTH_OF_FIELD_LENGTH ) ),
+                NumberStyles.HexNumber ) - LENGTH_OF_FIELD_LENGTH;
         }
 
-        private List<string> GetFieldData(string marker) {
-            List<string> list = new List<string>();
+        private string GetFieldBytes(string marker) {
+            int markerIndex = FindMarkerIndex(marker);
+            int lengthOfField = CalculateLengthOfField(marker, markerIndex);
+            int fieldBytesIndex = markerIndex + MARKER_LENGTH + LENGTH_OF_FIELD_LENGTH;
 
-            int index = FindMarker(marker);
-            int fieldLength = GetFieldLength(marker);
-            int dataStart = FindDataStart(marker);
-            
-            while ( index != -1 ) {
-                list.Add( ReplaceDashesWithSpaces( BitConverter.ToString( fileBytes, dataStart, fieldLength ) ) );
-
-                index++;
-
-                index = FindMarker(marker, index);
-                fieldLength = GetFieldLength(marker, index);
-                dataStart = FindDataStart(marker, index);
-            }
-
-            return list;
+            return ReplaceDashesWithSpaces( BitConverter.ToString( fileBytes, fieldBytesIndex, lengthOfField ) );
         }
 
-        private int GetFieldLength(string marker, int startIndex = 0) {
-            int index = FindMarker(marker, startIndex);
-            
-            return int.Parse( RemoveDashes( BitConverter.ToString( fileBytes, index + MARKERLENGTH, MARKERLENGTH ) ),
-                NumberStyles.HexNumber ) - FIELDLENGTH;
+        private string GetCompressedImageBytes() {
+            int SOSMarkerIndex = FindMarkerIndex( SOS_MARKER );
+            int lengthOfField = CalculateLengthOfField( SOS_MARKER, SOSMarkerIndex );
+            int compressedImageBytesIndex = SOSMarkerIndex + MARKER_LENGTH + LENGTH_OF_FIELD_LENGTH + lengthOfField;
+            int EOIMarkerIndex = FindMarkerIndex( EOI_MARKER );
+
+            return BitConverter.ToString( fileBytes, compressedImageBytesIndex, EOIMarkerIndex );
         }
 
+        private string GetAllBytes() {
+            return BitConverter.ToString( fileBytes );
+        }
+
+        /*
         private bool DataContainsThumbnail() {
-            int firstIndex = FindMarker(SOSMARKER);
+            int firstIndex = FindMarkerIndex(SOSMARKER);
 
-            if (FindMarker(SOSMARKER, firstIndex + MARKERLENGTH) != -1) {
+            if (FindMarkerIndex(SOSMARKER, firstIndex + MARKERLENGTH) != -1) {
                 return true;
             }
 
             return false;
+        }*/
+
+        private string _DQT;
+        public string DQT {
+            get { return _DQT; }
+            set {
+                if (value == null)
+                    throw new ArgumentNullException();
+                _DQT = value;
+            }
+        }
+
+        private string _DHT;
+        public string DHT {
+            get { return _DHT; }
+            set {
+                if ( value == null )
+                    throw new ArgumentNullException();
+                _DHT = value;
+            }
+        }
+
+        private string _SOF;
+        public string SOF {
+            get { return _SOF; }
+            set {
+                if ( value == null )
+                    throw new ArgumentNullException();
+                _SOF = value;
+            }
+        }
+
+        private string _SOS;
+        public string SOS {
+            get { return _SOS; }
+            set {
+                if ( value == null )
+                    throw new ArgumentNullException();
+                _SOS = value;
+            }
+        }
+
+        private string _compressedImage;
+        public string CompressedImage {
+            get {
+                return _compressedImage;
+            }
+            set {
+                if ( value == null )
+                    throw new ArgumentNullException();
+                _compressedImage = value;
+            }
+        }
+
+        private string _all;
+        public string All {
+            get { return _all; }
+            set {
+                if ( value == null )
+                    throw new ArgumentNullException();
+                _all = value;
+            }
         }
 
         /// <summary>
-        /// Calls the LoadImage method.
+        /// Loads a JPEG file into the instance and sets all its properties.
         /// </summary>
         /// <param name="path">Path to the JPEG file you wish to process.</param>
         public JPEGFileHandler( string path ) {
-            LoadImage( path );
+            LoadFile( path );
+            DQT = GetFieldBytes( DQT_MARKER );
+            DHT = GetFieldBytes( DHT_MARKER );
+            SOF = GetFieldBytes( SOF0_MARKER );
+            SOS = GetFieldBytes( SOS_MARKER );
+            CompressedImage = GetCompressedImageBytes();
+            All = GetAllBytes();
         }
 
         /// <summary>
         /// Loads a JPEG file into the class.
         /// </summary>
         /// <param name="path">Path to the JPEG file you wish to process.</param>
-        public void LoadImage( string path ) {
-            try {
-                fileBytes = File.ReadAllBytes( path );
-            } catch ( ArgumentException e ) {
-                Console.WriteLine( "Path is a zero-length string, contains only white space, or contains one or more invalid characters as defined by InvalidPathChars. Message: " + e.Message );
-            } catch ( PathTooLongException e ) {
-                Console.WriteLine( "The specified path, file name, or both exceed the system-defined maximum length. For example, on Windows-based platforms, paths must be less than 248 characters, and file names must be less than 260 characters. Message: " + e.Message );
-            } catch ( DirectoryNotFoundException e ) {
-                Console.WriteLine( "The specified path is invalid (for example, it is on an unmapped drive). Message: " + e.Message );
-            } catch ( IOException e ) {
-                Console.WriteLine( "An I/O error occurred while opening the file. Message: " + e.Message );
-            } catch ( UnauthorizedAccessException e ) {
-                Console.WriteLine( "This operation is not supported on the current platform. - or - path specified a directory. - or - The caller does not have the required permission. Message: " + e.Message );
-            } catch ( NotSupportedException e ) {
-                Console.WriteLine( "path is in an invalid format. Message: " + e.Message );
-            } catch ( SecurityException e ) {
-                Console.WriteLine( "The caller does not have the required permission. Message: " + e.Message );
-            }
+        public void LoadFile( string path ) {
+            fileBytes = File.ReadAllBytes( path );
         }
 
 
@@ -130,96 +170,8 @@ namespace Components {
         /// Saves a JPEG file at the given path based on the contained compressed image data.
         /// </summary>
         /// <param name="path">Path to the JPEG file you wish to save.</param>
-        public void SaveImage( string path ) {
-            try {
-                File.WriteAllBytes( path, fileBytes );
-            } catch ( ArgumentException e ) {
-                Console.WriteLine( "Path is a zero-length string, contains only white space, or contains one or more invalid characters as defined by InvalidPathChars. Message: " + e.Message );
-            } catch ( PathTooLongException e ) {
-                Console.WriteLine( "The specified path, file name, or both exceed the system-defined maximum length. For example, on Windows-based platforms, paths must be less than 248 characters, and file names must be less than 260 characters. Message: " + e.Message );
-            } catch ( DirectoryNotFoundException e ) {
-                Console.WriteLine( "The specified path is invalid (for example, it is on an unmapped drive). Message: " + e.Message );
-            } catch ( IOException e ) {
-                Console.WriteLine( "An I/O error occurred while opening the file. Message: " + e.Message );
-            } catch ( UnauthorizedAccessException e ) {
-                Console.WriteLine( "This operation is not supported on the current platform. - or - path specified a directory. - or - The caller does not have the required permission. Message: " + e.Message );
-            } catch ( NotSupportedException e ) {
-                Console.WriteLine( "path is in an invalid format. Message: " + e.Message );
-            } catch ( SecurityException e ) {
-                Console.WriteLine( "The caller does not have the required permission. Message: " + e.Message );
-            }
-        }
-
-        /// <summary>
-        /// Gets DefineQuantizationTable marker data as a List.
-        /// </summary>
-        /// <returns>A List containing DefineQuantizationTable marker data.</returns>
-        public List<string> GetDQT() {
-            return GetFieldData(DQTMARKER);
-        }
-
-        /// <summary>
-        /// Gets DefineHuffmanTable marker data as a List.
-        /// </summary>
-        /// <returns>A List containing DefineHuffmanTable marker data.</returns>
-        public List<string> GetDHT() {
-            return GetFieldData(DHTMARKER);
-        }
-
-        /// <summary>
-        /// Gets DefineRestartInteroperability marker data as a List.
-        /// </summary>
-        /// <returns>A List containing DefineRestartInteroperability marker data.</returns>
-        public List<string> GetDRI() {
-            return GetFieldData(DRIMARKER);
-        }
-
-        /// <summary>
-        /// Gets StartOfFrame marker data as a List.
-        /// </summary>
-        /// <returns>A List containing StartOfFrame marker data.</returns>
-        public List<string> GetSOF() {
-            return GetFieldData(SOFMARKER);
-        }
-
-        /// <summary>
-        /// Gets StartOfScan marker data as a List.
-        /// </summary>
-        /// <returns>A List containing StartOfScan marker data.</returns>
-        public List<string> GetSOS() {
-            return GetFieldData(SOSMARKER);
-        }
-
-        /// <summary>
-        /// Gets compressed image data as a string.
-        /// </summary>
-        /// <returns>A string containing compressed image data.</returns>
-        public string GetCompressedImageData() {
-            int index = FindMarker(SOSMARKER);
-
-            if (DataContainsThumbnail()) {
-                index = FindMarker(SOSMARKER, index + MARKERLENGTH);
-            }
-
-            int SOSFieldLength = GetFieldLength(SOSMARKER, index);
-
-            int startIndex = index + ( MARKERLENGTH + FIELDLENGTH ) + SOSFieldLength;
-            
-            while ( RemoveDashes( BitConverter.ToString( fileBytes, index, MARKERLENGTH ) ) != EOIMARKER ) {
-                index++;
-            }
-
-            int endIndex = index;
-            
-            return RemoveDashes( BitConverter.ToString( fileBytes, startIndex, endIndex - startIndex ) );
-        }
-
-        /// <summary>
-        /// Gets all data from MemoryStream as a string.
-        /// </summary>
-        /// <returns>A string containing all data from MemoryStream.</returns>
-        public string GetAllData() {
-            return ReplaceDashesWithSpaces( BitConverter.ToString( fileBytes, 0, fileBytes.Length ) );
+        public void SaveFile( string path ) {
+            File.WriteAllBytes( path, fileBytes );
         }
     }
 }
