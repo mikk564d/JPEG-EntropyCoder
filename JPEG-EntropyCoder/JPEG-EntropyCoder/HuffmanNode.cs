@@ -6,117 +6,84 @@ using System.Threading.Tasks;
 
 namespace JPEG_EntropyCoder {
     class HuffmanNode {
-        static LinkedList<LinkedList<string>> DHTLists; //Contains the values for each level of the tree
 
-        public string value { get; protected set; }
-        public string addr { get; protected set; }
-        public int lvl { get; protected set; }
-        public bool leaf { get; protected set; }
 
-        public HuffmanNode left;
-        public HuffmanNode right;
+        private string Value;
+        private string Address;
+        private int Level;
+        private bool Leaf;
 
-        public HuffmanNode(string DHT) : this("", DHT) {
+        public HuffmanNode Left;
+        public HuffmanNode Right;
 
-        }
 
-        public HuffmanNode(string binaddr, string DHT) {
-            this.lvl = binaddr.Length;
-            this.addr = binaddr;
-            DHT = DHT.Remove(0, 3);
-            DHT = "00 " + DHT;
+        public HuffmanNode(string binaddr) {
+            this.Level = binaddr.Length;
+            this.Address = binaddr;
 
-            if (this.lvl == 0) {
-                this.populateLists(DHT);
-            }
+            this.makeMeLeaf();
 
-            if (!makeMeLeaf() && this.lvl < 16) {
-                this.left = new HuffmanNode(binaddr + "0", DHT);
-                this.right = new HuffmanNode(binaddr + "1", DHT);
+            if (this.Leaf && this.Level < 16) {
+                this.Left = new HuffmanNode(binaddr + "0");
+                this.Right = new HuffmanNode(binaddr + "1");
             }
         }
 
-        public string SearchFor(string binAddr, int index) {
+        public string SearchFor(string binAddr) {
             //Takes a binary sequence by string and seraches for a value. 
             //If no leaf is found at that address, an empty string is returned.
-            if (this.leaf) {
-                if (this.addr == binAddr) {
-                    return this.value;
+            if (this.Leaf) {
+                if (this.Address == binAddr) {
+                    return this.Value;
                 } else {
                     return "";
                 }
             } else {
                 string result;
 
-                if (binAddr.Length <= index) {
+                if (binAddr.Length <= this.Level) {
                     result = "";
-                } else if (binAddr[index] == '0') { // Go left 
-                    result = this.left.SearchFor(binAddr, index + 1);
+                } else if (binAddr[this.Level] == '0') { // Go left 
+                    result = this.Left.SearchFor(binAddr);
                 } else {
-                    result = this.right.SearchFor(binAddr, index + 1);
+                    result = this.Right.SearchFor(binAddr);
                 }
                 return result;
             }
         }
 
         public void printAddresses() {
-            if (this.leaf) {
-                Console.WriteLine("{0} - {1}", this.addr, this.value);
+            if (this.Leaf) {
+                Console.WriteLine("{0} - {1}", this.Address, this.Value);
             }
 
-            if (this.left != null) {
-                this.left.printAddresses();
+            if (this.Left != null) {
+                this.Left.printAddresses();
             }
-            if (this.right != null) {
-                this.right.printAddresses();
-            }
-
-        }
-        /// <summary>
-        /// DHTLists is populated by creating a new sublist for every level in the huffmantree
-        /// and adding any values that might be present for that level to that sublist.
-        /// </summary>
-        /// <param name="DHT">Must be a space separated string of individual hex-values.</param>
-        public void populateLists(string DHT) {
-
-            HuffmanNode.DHTLists = new LinkedList<LinkedList<string>> { };
-            string[] dhtsplit = DHT.Split(' ');
-            int valueIndex = 17;
-            for (int i = 0; i < 17; i++) {
-
-                int dhtamount = Convert.ToInt32(dhtsplit[i].ToString(), 16);
-
-                LinkedList<string> valuesList = new LinkedList<string> { };
-                for (int d = valueIndex; d < valueIndex + dhtamount; d++) {
-                    valuesList.AddLast(dhtsplit[d]);
-                }
-                valueIndex += dhtamount;
-                HuffmanNode.DHTLists.AddLast(valuesList);
+            if (this.Right != null) {
+                this.Right.printAddresses();
             }
 
         }
+
 
         public LinkedList<string> levelList() {
             // returns the list of values for the treelevel of this node.
-            return HuffmanNode.DHTLists.ElementAt(this.lvl);
+            return HuffmanTree.DHTLists.ElementAt(this.Level);
         }
 
 
 
-        public bool makeMeLeaf() {
+        private void makeMeLeaf() {
             //Tries to convert this node into a leaf and assign it a value.
-            //Returns true if successfull and false otherwise
-            if (this.lvl - 1 >= 0 && this.levelList().Count() > 0) {
+            if (this.Level - 1 >= 0 && this.levelList().Count() > 0) {
 
-                this.value = this.levelList().First.Value;
-                this.leaf = true;
-                HuffmanNode.DHTLists.ElementAt(this.lvl).RemoveFirst();
-                return true;
-            } else {
-                return false;
-            }
+                this.Value = this.levelList().First.Value;
+                this.Leaf = true;
+                this.levelList().RemoveFirst();
+            } 
         }
 
     }
 }
-}
+
