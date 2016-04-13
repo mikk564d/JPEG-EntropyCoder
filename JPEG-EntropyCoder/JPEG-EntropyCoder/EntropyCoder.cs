@@ -88,36 +88,26 @@ namespace JPEG_EntropyCoder {
 
 
         private void DecodeBinaryData() {
-            bool hitEOB;
+            bool hitEOB = false;
             int count = 0;
 
             int luminensSubsamling = 1;
             int chrominensSubsampling = 2;
 
-            while (CurrentIndex < BinaryData.Length) {
+            while (CurrentIndex < BinaryData.Length && BinaryData.Length - CurrentIndex < 8) {
 
                 for (int i = 0; i < luminensSubsamling; i++) {
                     DecodeHuffmanHexValue(HuffmanTable.LumDC, true);
-                    for (int j = 0; j < 63; j++) {
+                    for (int j = 0; j < 63 || !hitEOB; j++) {
                         hitEOB = DecodeHuffmanHexValue(HuffmanTable.LumAC, false);
-                        if (hitEOB) {
-                            break;
-                        }
                     }
                 }
 
                 for (int i = 0; i < chrominensSubsampling; i++) {
                     DecodeHuffmanHexValue(HuffmanTable.ChromDC, true);
-                    for (int j = 0; j < 63; j++) {
+                    for (int j = 0; j < 63 || !hitEOB; j++) {
                         hitEOB = DecodeHuffmanHexValue(HuffmanTable.ChromAC, false);
-                        if (hitEOB) {
-                            break;
-                        }
                     }
-                }
-                if (BinaryData.Length - CurrentIndex < 8) {
-                    //Only trash left.
-                    break;
                 }
                 count++;
             }
