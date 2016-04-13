@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using System.Text;
-using HuffmanTreeBuilder;
+using JPEG_EntropyCoder;
+using JPEG_EntropyCoder.Components;
 
 namespace Components {
     public class Decoder {
@@ -30,7 +30,7 @@ namespace Components {
             buildHuffmanTrees(extractor);
             getBinaryData(extractor);
             decodeBinaryData();
-            ComponentsThatCanBeChanged = countValuesThatCanBeChanged();
+            ComponentsThatCanBeChanged = CountValuesThatCanBeChanged();
             Console.WriteLine();
         }
 
@@ -53,7 +53,7 @@ namespace Components {
             BinaryData = sBuilder.ToString();
         }
 
-        private void decodeBinaryData() {
+        private void ecodeBinaryData() {
             bool hitEOB;
             int count = 0;
 
@@ -180,7 +180,7 @@ namespace Components {
             return HexData;
         }
 
-        private int countValuesThatCanBeChanged() {
+        private int CountValuesThatCanBeChanged() {
             int count = 0;
 
             foreach (EntropyComponent entropyComponent in EntropyComponents) {

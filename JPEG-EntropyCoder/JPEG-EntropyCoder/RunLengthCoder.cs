@@ -16,6 +16,6 @@ namespace JPEG_EntropyCoder {
 
         public EntropyComponent Decode() {
             throw new NotImplementedException();
-        }
+        }       
     }
 }
