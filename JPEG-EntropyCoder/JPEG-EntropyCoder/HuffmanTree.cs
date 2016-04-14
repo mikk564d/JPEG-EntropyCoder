@@ -14,8 +14,6 @@ namespace JPEG_EntropyCoder {
             this.tree = new HuffmanNode("", DHT);
         }
 
-
-
         public string Find(string treePath) {
             return this.tree.SearchFor(treePath);
         }
