@@ -23,7 +23,7 @@ namespace JPEG_EntropyCoder {
             if (DHT != null) {
                 this.populateLists(DHT);
             }
-
+            
             this.Level = binaddr.Length;
             this.Address = binaddr;
 
@@ -82,17 +82,17 @@ namespace JPEG_EntropyCoder {
             }
         }
 
-        public void printAddresses(out List<string> result) {
-            result = new List<string> { };
+        public void printAddresses(ref List<string> result) {
+            
             if (this.Leaf) {
                 result.Add(string.Format("{0} - {1}", this.Address, this.Value));
             }
 
             if (this.Left != null) {
-                this.Left.printAddresses(out result);
+                this.Left.printAddresses(ref result);
             }
             if (this.Right != null) {
-                this.Right.printAddresses(out result);
+                this.Right.printAddresses(ref result);
             }
 
         }

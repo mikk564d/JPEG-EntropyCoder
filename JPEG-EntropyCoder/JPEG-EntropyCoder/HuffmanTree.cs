@@ -20,7 +20,7 @@ namespace JPEG_EntropyCoder {
 
         public List<string> PrintTree() {
             List<string> result = new List<string> { };
-            this.tree.printAddresses(out result);
+            this.tree.printAddresses(ref result);
             return result;
         }
     }
