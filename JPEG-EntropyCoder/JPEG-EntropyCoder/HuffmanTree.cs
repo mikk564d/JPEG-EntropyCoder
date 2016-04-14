@@ -4,7 +4,6 @@ using System.Linq;
 
 namespace JPEG_EntropyCoder {
     public class HuffmanTree : IHuffmanTree {
-        
 
         public string DHT { get; }
 

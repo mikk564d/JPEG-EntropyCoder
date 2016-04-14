@@ -29,7 +29,7 @@ namespace JPEG_EntropyCoder {
 
             this.makeMeLeaf();
 
-            if (this.Leaf && this.Level < 16) {
+            if (!this.Leaf && this.Level < 16) {
                 this.Left = new HuffmanNode(binaddr + "0");
                 this.Right = new HuffmanNode(binaddr + "1");
             }
