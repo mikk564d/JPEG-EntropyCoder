@@ -63,7 +63,7 @@ namespace JPEG_EntropyCoder {
             int compressedImageBytesIndex = SOSMarkerIndex + MARKER_LENGTH + LENGTH_OF_FIELD_LENGTH + lengthOfField;
             int EOIMarkerIndex = FindMarkerIndex( EOI_MARKER, SOSMarkerIndex + MARKER_LENGTH + LENGTH_OF_FIELD_LENGTH + lengthOfField );
 
-            return BitConverter.ToString( fileBytes, compressedImageBytesIndex, EOIMarkerIndex );
+            return BitConverter.ToString( fileBytes, compressedImageBytesIndex, EOIMarkerIndex - compressedImageBytesIndex );
         }
 
         private string GetAllBytes() {
