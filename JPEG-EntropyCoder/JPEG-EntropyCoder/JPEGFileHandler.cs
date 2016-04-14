@@ -36,7 +36,7 @@ namespace JPEG_EntropyCoder {
                 nextTwoBytes = ReplaceDashesWithSpaces( BitConverter.ToString( fileBytes, index, MARKER_LENGTH ) );
             }
                 
-            if (nextTwoBytes == EOI_MARKER)
+            if (nextTwoBytes == EOI_MARKER && marker != EOI_MARKER)
                 throw new MarkerNotFoundException("Marker was not found in JPEG file.", marker);
 
             return index;
@@ -61,7 +61,7 @@ namespace JPEG_EntropyCoder {
             int SOSMarkerIndex = FindMarkerIndex( SOS_MARKER );
             int lengthOfField = CalculateLengthOfField( SOS_MARKER, SOSMarkerIndex );
             int compressedImageBytesIndex = SOSMarkerIndex + MARKER_LENGTH + LENGTH_OF_FIELD_LENGTH + lengthOfField;
-            int EOIMarkerIndex = FindMarkerIndex( EOI_MARKER );
+            int EOIMarkerIndex = FindMarkerIndex( EOI_MARKER, SOSMarkerIndex + MARKER_LENGTH + LENGTH_OF_FIELD_LENGTH + lengthOfField );
 
             return BitConverter.ToString( fileBytes, compressedImageBytesIndex, EOIMarkerIndex );
         }
@@ -144,30 +144,29 @@ namespace JPEG_EntropyCoder {
         }
 
         /// <summary>
-        /// Loads a JPEG file into the instance and sets all its properties.
+        /// Loads a JPEG file into the instance.
         /// </summary>
         /// <param name="path">Path to the JPEG file you wish to process.</param>
         public JPEGFileHandler( string path ) {
             LoadFile( path );
+        }
+
+        /// <summary>
+        /// Loads a JPEG file into the instance and sets all properties.
+        /// </summary>
+        /// <param name="path">Path to the JPEG file you wish to process.</param>
+        public void LoadFile( string path ) {
+            fileBytes = File.ReadAllBytes( path );
             DQT = GetFieldBytes( DQT_MARKER );
             DHT = GetFieldBytes( DHT_MARKER );
             SOF = GetFieldBytes( SOF0_MARKER );
             SOS = GetFieldBytes( SOS_MARKER );
             CompressedImage = GetCompressedImageBytes();
-            All = GetAllBytes();
+            All = GetByteArrayAsString( fileBytes );
         }
 
         /// <summary>
-        /// Loads a JPEG file into the class.
-        /// </summary>
-        /// <param name="path">Path to the JPEG file you wish to process.</param>
-        public void LoadFile( string path ) {
-            fileBytes = File.ReadAllBytes( path );
-        }
-
-
-        /// <summary>
-        /// Saves a JPEG file at the given path based on the contained compressed image data.
+        /// Saves a JPEG file at the given path based on all contained bytes.
         /// </summary>
         /// <param name="path">Path to the JPEG file you wish to save.</param>
         public void SaveFile( string path ) {
