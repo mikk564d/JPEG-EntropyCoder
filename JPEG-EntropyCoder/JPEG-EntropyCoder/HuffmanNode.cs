@@ -100,7 +100,7 @@ namespace JPEG_EntropyCoder {
 
         private LinkedList<string> levelList() {
             // returns the list of values for the treelevel of this node.
-            return HuffmanNode.DHTLists.ElementAt(this.Level);
+            return HuffmanNode.DHTLists.ElementAt(this.Level - 1);
         }
 
 
