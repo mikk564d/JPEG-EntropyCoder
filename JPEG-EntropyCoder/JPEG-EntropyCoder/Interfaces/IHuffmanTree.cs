@@ -8,6 +8,6 @@ namespace JPEG_EntropyCoder {
     public interface IHuffmanTree {
         string DHT { get; }
         string Find(string treePath);
-        string PrintTree();
+        List<string> PrintTree();
     }
 }

@@ -162,7 +162,7 @@ namespace JPEG_EntropyCoder {
             SOF = GetFieldBytes( SOF0_MARKER );
             SOS = GetFieldBytes( SOS_MARKER );
             CompressedImage = GetCompressedImageBytes();
-            All = GetByteArrayAsString( fileBytes );
+            All = GetAllBytes();
         }
 
         /// <summary>
