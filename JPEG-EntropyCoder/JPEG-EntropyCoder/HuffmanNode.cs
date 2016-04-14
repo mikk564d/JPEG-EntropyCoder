@@ -7,17 +7,23 @@ using System.Threading.Tasks;
 namespace JPEG_EntropyCoder {
     class HuffmanNode {
 
+        private static LinkedList<LinkedList<string>> DHTLists; //Contains the values for each level of the tree
 
         private string Value;
         private string Address;
         private int Level;
         private bool Leaf;
 
-        public HuffmanNode Left;
-        public HuffmanNode Right;
+        private HuffmanNode Left;
+        private HuffmanNode Right;
 
 
-        public HuffmanNode(string binaddr) {
+        public HuffmanNode(string binaddr, string DHT=null) {
+
+            if (DHT != null) {
+                this.populateLists(DHT);
+            }
+
             this.Level = binaddr.Length;
             this.Address = binaddr;
 
@@ -27,6 +33,30 @@ namespace JPEG_EntropyCoder {
                 this.Left = new HuffmanNode(binaddr + "0");
                 this.Right = new HuffmanNode(binaddr + "1");
             }
+        }
+
+        /// <summary>
+        /// DHTLists is populated by creating a new sublist for every level in the huffmantree
+        /// and adding any values that might be present for that level to that sublist.
+        /// </summary>
+        /// <param name="DHT">Must be a space separated string of individual hex-values.</param>
+        public void populateLists(string DHT) {
+
+            HuffmanNode.DHTLists = new LinkedList<LinkedList<string>> { };
+            string[] dhtsplit = DHT.Split(' ');
+            int valueIndex = 16;
+            for (int i = 0; i < 16; i++) {
+
+                int dhtamount = Convert.ToInt32(dhtsplit[i].ToString(), 16);
+
+                LinkedList<string> valuesList = new LinkedList<string> { };
+                for (int d = valueIndex; d < valueIndex + dhtamount; d++) {
+                    valuesList.AddLast(dhtsplit[d]);
+                }
+                valueIndex += dhtamount;
+                HuffmanNode.DHTLists.AddLast(valuesList);
+            }
+
         }
 
         public string SearchFor(string binAddr) {
@@ -52,24 +82,25 @@ namespace JPEG_EntropyCoder {
             }
         }
 
-        public void printAddresses() {
+        public void printAddresses(out List<string> result) {
+            result = new List<string> { };
             if (this.Leaf) {
-                Console.WriteLine("{0} - {1}", this.Address, this.Value);
+                result.Add(string.Format("{0} - {1}", this.Address, this.Value));
             }
 
             if (this.Left != null) {
-                this.Left.printAddresses();
+                this.Left.printAddresses(out result);
             }
             if (this.Right != null) {
-                this.Right.printAddresses();
+                this.Right.printAddresses(out result);
             }
 
         }
 
 
-        public LinkedList<string> levelList() {
+        private LinkedList<string> levelList() {
             // returns the list of values for the treelevel of this node.
-            return HuffmanTree.DHTLists.ElementAt(this.Level);
+            return HuffmanNode.DHTLists.ElementAt(this.Level);
         }
 
 
