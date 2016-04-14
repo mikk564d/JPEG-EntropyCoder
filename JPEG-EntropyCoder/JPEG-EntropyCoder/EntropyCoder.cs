@@ -51,9 +51,13 @@ namespace JPEG_EntropyCoder {
                 DHTs.Add(dht);
             }
 
+            foreach (string dhT in DHTs) {
+                Console.WriteLine(dhT);
+            }
+
             List<HuffmanTree> huffmanTrees = new List<HuffmanTree>();
             foreach (string table in DHTs) {
-                HuffmanTrees.Add(new HuffmanTree(table));
+                huffmanTrees.Add(new HuffmanTree(table));
             }
 
             return huffmanTrees;
@@ -92,7 +96,8 @@ namespace JPEG_EntropyCoder {
             int luminensSubsamling = 1;
             int chrominensSubsampling = 2;
 
-            while (currentIndex < binaryData.Length && binaryData.Length - currentIndex < 8) {
+            while (currentIndex < binaryData.Length && binaryData.Length - currentIndex > 8) {
+                Console.WriteLine("MONGOL!!");
 
                 //DecodeBlock(luminensSubsamling, "luminens");
                 //DecodeBlock(chrominensSubsampling, "chrominens");
