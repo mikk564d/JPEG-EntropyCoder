@@ -1,7 +1,9 @@
 ﻿using System;
-using System.Globalization;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using JPEG_EntropyCoder.Exceptions;
+using JPEG_EntropyCoder.Interfaces;
 
 namespace JPEG_EntropyCoder {
     /// <summary>
@@ -10,79 +12,109 @@ namespace JPEG_EntropyCoder {
     public class JPEGFileHandler : IJPEGFileHandler {
         private const byte MARKER_LENGTH = 2;
         private const byte LENGTH_OF_FIELD_LENGTH = 2;
-        private const string DQT_MARKER = "FF DB";
-        private const string DHT_MARKER = "FF C4";
-        private const string SOF0_MARKER = "FF C0";
-        private const string SOF2_MARKER = "FF C2";
-        private const string SOS_MARKER = "FF DA";
-        private const string EOI_MARKER = "FF D9";
+        private const byte MARKER_PREFIX = 0xFF;
 
-        private byte[] fileBytes;
+        private readonly byte[] SOIMarker = { MARKER_PREFIX, 0xD8 };
+        private readonly byte[] DQTMarker = { MARKER_PREFIX, 0xDB };
+        private readonly byte[] DHTMarker = { MARKER_PREFIX, 0xC4 };
+        private readonly byte[] SOF0Marker = { MARKER_PREFIX, 0xC0 };
+        private readonly byte[] SOF2Marker = { MARKER_PREFIX, 0xC2 };
+        private readonly byte[] SOSMarker = { MARKER_PREFIX, 0xDA };
+        private readonly byte[] EOIMarker = { MARKER_PREFIX, 0xD9 };
+
+        private bool fileContainsThumbnail;
+        private uint thumbnailStartIndex;
+        private uint thumbnailEndIndex;
+        private Dictionary<byte[], uint> markerIndexes = new Dictionary<byte[], uint>();
 
         private string RemoveDashes(string s) {
-            return s.Replace("-", "");
+            return s.Replace( "-", "" );
         }
 
         private string ReplaceDashesWithSpaces(string s) {
             return s.Replace("-", " ");
         }
 
-        private int FindMarkerIndex(string marker, int startIndex = 0) {
-            int index = startIndex;
-            string nextTwoBytes = ReplaceDashesWithSpaces( BitConverter.ToString( fileBytes, index, MARKER_LENGTH ) );
-
-            while ( nextTwoBytes != marker && nextTwoBytes != EOI_MARKER ) {
-                index++;
-                nextTwoBytes = ReplaceDashesWithSpaces( BitConverter.ToString( fileBytes, index, MARKER_LENGTH ) );
-            }
-                
-            if (nextTwoBytes == EOI_MARKER && marker != EOI_MARKER)
-                throw new MarkerNotFoundException("Marker was not found in JPEG file.", marker);
-
-            return index;
-        }
-
-        private int CalculateLengthOfField( string marker, int startIndex = 0 ) {
-            int lengthOfFieldIndex = FindMarkerIndex( marker, startIndex ) + MARKER_LENGTH;
-
-            return int.Parse( RemoveDashes( BitConverter.ToString( fileBytes, lengthOfFieldIndex, LENGTH_OF_FIELD_LENGTH ) ),
-                NumberStyles.HexNumber ) - LENGTH_OF_FIELD_LENGTH;
-        }
-
-        private string GetFieldBytes(string marker) {
-            int markerIndex = FindMarkerIndex(marker);
-            int lengthOfField = CalculateLengthOfField(marker, markerIndex);
-            int fieldBytesIndex = markerIndex + MARKER_LENGTH + LENGTH_OF_FIELD_LENGTH;
-
-            return ReplaceDashesWithSpaces( BitConverter.ToString( fileBytes, fieldBytesIndex, lengthOfField ) );
-        }
-
-        private string GetCompressedImageBytes() {
-            int SOSMarkerIndex = FindMarkerIndex( SOS_MARKER );
-            int lengthOfField = CalculateLengthOfField( SOS_MARKER, SOSMarkerIndex );
-            int compressedImageBytesIndex = SOSMarkerIndex + MARKER_LENGTH + LENGTH_OF_FIELD_LENGTH + lengthOfField;
-            int EOIMarkerIndex = FindMarkerIndex( EOI_MARKER, SOSMarkerIndex + MARKER_LENGTH + LENGTH_OF_FIELD_LENGTH + lengthOfField );
-
-            return RemoveDashes(BitConverter.ToString(fileBytes, compressedImageBytesIndex, EOIMarkerIndex - compressedImageBytesIndex));
-        }
-
-        private string GetAllBytes() {
-            return BitConverter.ToString( fileBytes );
-        }
-
-        /*
-        private bool DataContainsThumbnail() {
-            int firstIndex = FindMarkerIndex(SOSMARKER);
-
-            if (FindMarkerIndex(SOSMARKER, firstIndex + MARKERLENGTH) != -1) {
+        private bool FindMarkerIndex(byte[] marker, out uint markerIndex, uint startIndex = 0, bool firstMarkerInARow = true) {
+            /* Caching */
+            if ( markerIndexes.ContainsKey( marker ) ) {
+                markerIndex = markerIndexes[ marker ];
                 return true;
             }
 
-            return false;
+            uint index = startIndex;
+            byte[] nextTwoBytes = { _all[ index ], _all[ index + 1 ] };
+
+            while ( !nextTwoBytes.SequenceEqual( marker ) && !nextTwoBytes.SequenceEqual( EOIMarker ) ) {
+                index++;
+                nextTwoBytes[ 0 ] = _all[ index ];
+                nextTwoBytes[ 1 ] = _all[ index + 1 ];
+            }
+
+            markerIndex = index;
+                
+            if ( firstMarkerInARow && nextTwoBytes.SequenceEqual( EOIMarker ) && !marker.SequenceEqual( EOIMarker ) )
+                throw new MarkerNotFoundException("Marker was not found in JPEG file.", marker);
+
+            if ( !firstMarkerInARow && nextTwoBytes.SequenceEqual( EOIMarker ) && !marker.SequenceEqual( EOIMarker ) )
+                return false;
+
+            return true;
+        }
+
+        private uint CalculateLengthOfField( byte[] marker, uint startIndex = 0 ) {
+            uint lengthOfFieldIndex;
+            FindMarkerIndex( marker, out lengthOfFieldIndex, startIndex );
+            lengthOfFieldIndex += MARKER_LENGTH;
+            byte[] lengthOfField = { _all[ lengthOfFieldIndex + 1 ], _all[ lengthOfFieldIndex ], 0, 0 }; // Little endian
+
+            return BitConverter.ToUInt32( lengthOfField, 0 ) - LENGTH_OF_FIELD_LENGTH;
+        }
+
+        private byte[] GetFieldBytes( byte[] marker ) {
+            uint markerIndex;
+            FindMarkerIndex( marker, out markerIndex );
+            uint lengthOfField = CalculateLengthOfField( marker, markerIndex );
+            uint fieldBytesIndex = markerIndex + MARKER_LENGTH + LENGTH_OF_FIELD_LENGTH;
+            byte[] fields = _all.Skip( Convert.ToInt32( fieldBytesIndex ) ).Take( Convert.ToInt32( lengthOfField ) ).ToArray();
+
+            while ( FindMarkerIndex( marker, out markerIndex, markerIndex + MARKER_LENGTH, false ) ) {
+                lengthOfField = CalculateLengthOfField( marker, markerIndex );
+                fieldBytesIndex = markerIndex + MARKER_LENGTH + LENGTH_OF_FIELD_LENGTH;
+                fields = fields.Concat( _all.Skip( Convert.ToInt32( fieldBytesIndex ) ).Take( Convert.ToInt32( lengthOfField ) ) ).ToArray();
+            }
+
+            return fields;
+        }
+
+        private byte[] GetCompressedImageBytes() {
+            uint SOSMarkerIndex;
+            FindMarkerIndex( SOSMarker, out SOSMarkerIndex );
+            uint lengthOfField = CalculateLengthOfField( SOSMarker, SOSMarkerIndex );
+            uint compressedImageBytesIndex = SOSMarkerIndex + MARKER_LENGTH + LENGTH_OF_FIELD_LENGTH + lengthOfField;
+            uint EOIMarkerIndex;
+            FindMarkerIndex( EOIMarker, out EOIMarkerIndex, compressedImageBytesIndex );
+            
+            return _all.Skip( Convert.ToInt32( compressedImageBytesIndex ) ).Take( Convert.ToInt32( EOIMarkerIndex - compressedImageBytesIndex ) ).ToArray();
+        }
+        /*
+        private bool FindThumbnail(out int startIndex, out int endIndex) {
+            int firstSOIIndex;
+
+            return true;
+        }
+
+        private void SetFieldBytes(byte[] marker, byte[] bytes) {
+            int markerIndex = FindMarkerIndex( marker );
+            int lengthOfField = CalculateLengthOfField( marker, markerIndex );
+            string[] splitBytes = bytes.Split( ' ' );
+
+            
+
         }*/
 
-        private string _DQT;
-        public string DQT {
+        private byte[] _DQT;
+        public byte[] DQT {
             get { return _DQT; }
             set {
                 if (value == null)
@@ -91,8 +123,8 @@ namespace JPEG_EntropyCoder {
             }
         }
 
-        private string _DHT;
-        public string DHT {
+        private byte[] _DHT;
+        public byte[] DHT {
             get { return _DHT; }
             set {
                 if ( value == null )
@@ -101,8 +133,8 @@ namespace JPEG_EntropyCoder {
             }
         }
 
-        private string _SOF;
-        public string SOF {
+        private byte[] _SOF;
+        public byte[] SOF {
             get { return _SOF; }
             set {
                 if ( value == null )
@@ -111,8 +143,8 @@ namespace JPEG_EntropyCoder {
             }
         }
 
-        private string _SOS;
-        public string SOS {
+        private byte[] _SOS;
+        public byte[] SOS {
             get { return _SOS; }
             set {
                 if ( value == null )
@@ -121,8 +153,8 @@ namespace JPEG_EntropyCoder {
             }
         }
 
-        private string _compressedImage;
-        public string CompressedImage {
+        private byte[] _compressedImage;
+        public byte[] CompressedImage {
             get {
                 return _compressedImage;
             }
@@ -133,8 +165,8 @@ namespace JPEG_EntropyCoder {
             }
         }
 
-        private string _all;
-        public string All {
+        private byte[] _all;
+        public byte[] All {
             get { return _all; }
             set {
                 if ( value == null )
@@ -156,13 +188,12 @@ namespace JPEG_EntropyCoder {
         /// </summary>
         /// <param name="path">Path to the JPEG file you wish to process.</param>
         public void LoadFile( string path ) {
-            fileBytes = File.ReadAllBytes( path );
-            DQT = GetFieldBytes( DQT_MARKER );
-            DHT = GetFieldBytes( DHT_MARKER );
-            SOF = GetFieldBytes( SOF0_MARKER );
-            SOS = GetFieldBytes( SOS_MARKER );
+            All = File.ReadAllBytes( path );
+            DQT = GetFieldBytes( DQTMarker );
+            DHT = GetFieldBytes( DHTMarker );
+            SOF = GetFieldBytes( SOF0Marker );
+            SOS = GetFieldBytes( SOSMarker );
             CompressedImage = GetCompressedImageBytes();
-            All = GetAllBytes();
         }
 
         /// <summary>
@@ -170,7 +201,7 @@ namespace JPEG_EntropyCoder {
         /// </summary>
         /// <param name="path">Path to the JPEG file you wish to save.</param>
         public void SaveFile( string path ) {
-            File.WriteAllBytes( path, fileBytes );
+            File.WriteAllBytes( path, All );
         }
     }
 }

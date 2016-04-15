@@ -1,12 +1,12 @@
 ﻿
-namespace JPEG_EntropyCoder {
+namespace JPEG_EntropyCoder.Interfaces {
    public interface IJPEGFileHandler {
-        string DQT { get; set; }
-        string DHT { get; set; }
-        string SOF { get; set; }
-        string SOS { get; set; }
-        string CompressedImage { get; set; }
-        string All { get; set; }
+        byte[] DQT { get; set; }
+        byte[] DHT { get; set; }
+        byte[] SOF { get; set; }
+        byte[] SOS { get; set; }
+        byte[] CompressedImage { get; set; }
+        byte[] All { get; set; }
         void LoadFile(string path);
         void SaveFile(string path);
     }

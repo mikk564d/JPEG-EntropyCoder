@@ -3,21 +3,21 @@ using System.Runtime.Serialization;
 
 namespace JPEG_EntropyCoder.Exceptions {
     class MarkerNotFoundException : Exception {
-        public string Marker { get; }
+        public byte[] Marker { get; }
 
-        public MarkerNotFoundException( string marker ) {
+        public MarkerNotFoundException( byte[] marker ) {
             Marker = marker;
         }
 
-        public MarkerNotFoundException( string message, string marker ) : base( message ) {
+        public MarkerNotFoundException( string message, byte[] marker ) : base( message ) {
             Marker = marker;
         }
 
-        public MarkerNotFoundException( string message, Exception innerException, string marker ) : base( message, innerException ) {
+        public MarkerNotFoundException( string message, Exception innerException, byte[] marker ) : base( message, innerException ) {
             Marker = marker;
         }
 
-        protected MarkerNotFoundException( SerializationInfo info, StreamingContext context, string marker ) : base( info, context ) {
+        protected MarkerNotFoundException( SerializationInfo info, StreamingContext context, byte[] marker ) : base( info, context ) {
             Marker = marker;
         }
     }
