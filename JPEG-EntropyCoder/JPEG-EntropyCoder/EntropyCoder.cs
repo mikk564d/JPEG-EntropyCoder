@@ -9,22 +9,26 @@ using JPEG_EntropyCoder.Interfaces;
 namespace JPEG_EntropyCoder {
     public class EntropyCoder : IEntropyCoder {
         public EntropyCoder(string path) {
-            RunLengthCoder = new RunLengthCoder();
             HuffmanTrees = new List<HuffmanTree>();
             EntropyComponents = new List<EntropyComponent>();
             FileHandler = new JPEGFileHandler(path);
 
             HuffmanTrees = BuildHuffmanTrees(FileHandler.DHT);
+            foreach (HuffmanTree huffmanTree in HuffmanTrees) {
+                Console.WriteLine("Huffmantree");
+                foreach (string s in huffmanTree.PrintTree()) {
+                    Console.WriteLine(s);
+                }
+            }
         }
 
         enum HuffmanTable {
-            LumDC = 0, LumAC = 1, ChromDC = 2, ChromAC = 3
+            LumDC = 0, ChromDC = 1, LumAC = 2, ChromAC = 3
         }
 
         //private int CurrentIndex { get; set; }
         //private string BinaryData { get; set; }
         private JPEGFileHandler FileHandler { get; }
-        private RunLengthCoder RunLengthCoder { get; }
         private List<HuffmanTree> HuffmanTrees { get; }
         public List<EntropyComponent> EntropyComponents { get; set; }
 
@@ -44,6 +48,9 @@ namespace JPEG_EntropyCoder {
                     dht += currentByte + " ";
                     count += Convert.ToInt32(currentByte, 16);
                 }
+
+                
+
                 upperLimit = count + index;
                 for (; index < upperLimit; index++) {
                     dht += DHTValues[index] + " ";
@@ -93,25 +100,24 @@ namespace JPEG_EntropyCoder {
             int currentIndex = 0;
 
             string binaryData = GetBinaryData(FileHandler);
-            int luminensSubsamling = 1;
+            int luminensSubsamling = 4;
             int chrominensSubsampling = 2;
 
             while (currentIndex < binaryData.Length && binaryData.Length - currentIndex > 8) {
-                Console.WriteLine("MONGOL!!");
-
                 //DecodeBlock(luminensSubsamling, "luminens");
                 //DecodeBlock(chrominensSubsampling, "chrominens");
 
                 int length;
                 string toCheck;
                 int count;
-                for (int i = 0; i < luminensSubsamling; i++) {
-                    length = binaryData.Length > 31 ? 31 : binaryData.Length - currentIndex;
+                for (int i = 0; i < luminensSubsamling; i++) { 
+                    hitEOB = false;
+                    length = binaryData.Length - currentIndex > 31 ? 31 : binaryData.Length - currentIndex;
                     toCheck = binaryData.Substring(currentIndex, length);
                     DecodeHuffmanHexValue(toCheck ,HuffmanTable.LumDC, true, out count);
                     currentIndex += count;
-                    for (int j = 0; j < 63 || !hitEOB; j++) {
-                        length = binaryData.Length > 31 ? 31 : binaryData.Length - currentIndex;
+                    for (int j = 0; j < 63 && !hitEOB; j++) {
+                        length = binaryData.Length - currentIndex > 31 ? 31 : binaryData.Length - currentIndex;
                         toCheck = binaryData.Substring(currentIndex, length);
                         hitEOB = DecodeHuffmanHexValue(toCheck, HuffmanTable.LumAC, false, out count);
                         currentIndex += count;
@@ -119,12 +125,13 @@ namespace JPEG_EntropyCoder {
                 }
 
                 for (int i = 0; i < chrominensSubsampling; i++) {
-                    length = binaryData.Length > 31 ? 31 : binaryData.Length - currentIndex;
+                    hitEOB = false;
+                    length = binaryData.Length - currentIndex > 31 ? 31 : binaryData.Length - currentIndex;
                     toCheck = binaryData.Substring(currentIndex, length);
                     DecodeHuffmanHexValue(toCheck, HuffmanTable.ChromDC, true, out count);
                     currentIndex += count;
-                    for (int j = 0; j < 63 || !hitEOB; j++) {
-                        length = binaryData.Length > 31 ? 31 : binaryData.Length - currentIndex;
+                    for (int j = 0; j < 63 && !hitEOB; j++) {
+                        length = binaryData.Length - currentIndex > 31 ? 31 : binaryData.Length - currentIndex;
                         toCheck = binaryData.Substring(currentIndex, length);
                         hitEOB = DecodeHuffmanHexValue(toCheck, HuffmanTable.ChromAC, false, out count);
                         currentIndex += count;
@@ -173,7 +180,7 @@ namespace JPEG_EntropyCoder {
             if (huffmanLeafHexValue != "00" || (table == HuffmanTable.ChromDC || table == HuffmanTable.LumDC)) {
                 //amplitude = GetAmplitude(huffmanLeafHexValue);
                 int lenght = Convert.ToInt32(huffmanLeafHexValue[1].ToString(), 16);
-                amplitude = bitString.Substring(0, lenght);
+                amplitude = bitString.Substring(huffmanTreePath.Length, lenght);
                 count += amplitude.Length;
 
                 if (amplitude == "") {
