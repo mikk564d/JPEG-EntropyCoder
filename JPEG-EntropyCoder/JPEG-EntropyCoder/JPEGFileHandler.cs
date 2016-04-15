@@ -37,10 +37,10 @@ namespace JPEG_EntropyCoder {
 
         private bool FindMarkerIndex(byte[] marker, out uint markerIndex, uint startIndex = 0, bool firstMarkerInARow = true) {
             /* Caching */
-            if ( markerIndexes.ContainsKey( marker ) ) {
-                markerIndex = markerIndexes[ marker ];
-                return true;
-            }
+            //if ( markerIndexes.ContainsKey( marker ) ) {
+            //    markerIndex = markerIndexes[ marker ];
+            //    return true;
+            //}
 
             uint index = startIndex;
             byte[] nextTwoBytes = { _all[ index ], _all[ index + 1 ] };

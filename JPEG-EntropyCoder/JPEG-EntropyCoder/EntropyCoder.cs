@@ -15,6 +15,7 @@ namespace JPEG_EntropyCoder {
             FileHandler = new JPEGFileHandler(path);
             BinaryData = GetBinaryData(FileHandler);
             //new byte[] { 0x00, 0x00, 0x03, 0x01, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x03, 0x04, 0x01, 0x00, 0x07 }
+
             HuffmanTrees = BuildHuffmanTrees(FileHandler.DHT);
             foreach (HuffmanTree huffmanTree in HuffmanTrees) {
                 Console.WriteLine("Huffmantree");
@@ -37,7 +38,7 @@ namespace JPEG_EntropyCoder {
 
             List<byte[]> DHTs = new List<byte[]>();
             int index = 0;
-            for (int i = 0; i < 1; i++) {
+            for (int i = 0; i < 4; i++) {
                 List<byte> dht = new List<byte>();
                 int count = 0;
                 index++;
@@ -52,6 +53,13 @@ namespace JPEG_EntropyCoder {
                 DHTs.Add(dht.ToArray());
             }
 
+            foreach (byte[] bytes in DHTs) {
+                foreach (byte b in bytes) {
+                    Console.Write(b + " ");
+                }
+                Console.WriteLine();
+            }
+
             List<HuffmanTree> huffmanTrees = new List<HuffmanTree>();
             foreach (byte[] table in DHTs) {
                 huffmanTrees.Add(new HuffmanTree(table));
@@ -61,15 +69,14 @@ namespace JPEG_EntropyCoder {
         }
 
         private BitArray GetBinaryData(JPEGFileHandler extractor) {
-            BitArray binData = new BitArray(0);
+            BitArray binData = new BitArray(extractor.CompressedImage);
             binData = Utility.ReverseBitArray(binData);
 
-            for (int i = 0, j = binData.Count - 1; i < binData.Count; i++, j--) {
+            for (int i = 0, j = binData.Count - 1; i < binData.Count / 2; i++, j--) {
                 bool temp = binData[i];
                 binData[i] = binData[j];
                 binData[j] = temp;
             }
-
 
             return binData;
         }
@@ -157,7 +164,7 @@ namespace JPEG_EntropyCoder {
             currentHuffmanTreePath = new BitArray(16);
             huffmanLeafHexValue = 0xFF;
 
-            for (int i = 0, j = BinaryData.Count; i < 16 && huffmanLeafHexValue == 0xFF; i++, j--) {
+            for (int i = 0, j = BinaryData.Count - 1; i < 16 && huffmanLeafHexValue == 0xFF; i++, j--) {
                 currentHuffmanTreePath[i] = BinaryData[j];
                 huffmanLeafHexValue = HuffmanTrees[(int)table].Find(currentHuffmanTreePath);
             }
