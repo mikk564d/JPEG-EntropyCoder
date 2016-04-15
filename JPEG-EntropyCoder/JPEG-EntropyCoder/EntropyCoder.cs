@@ -32,40 +32,37 @@ namespace JPEG_EntropyCoder {
         private List<HuffmanTree> HuffmanTrees { get; }
         public List<EntropyComponent> EntropyComponents { get; set; }
 
-        private List<HuffmanTree> BuildHuffmanTrees (string DHTFromFile) {
-            string[] DHTValues = DHTFromFile.Split(' ');
-
-
-            List<string> DHTs = new List<string>();
+        private List<HuffmanTree> BuildHuffmanTrees (byte[] DHTFromFile) {
+            
+            List<byte[]> DHTs = new List<byte[]>();
             int index = 0;
             for (int i = 0; i < 4; i++) {
-                string dht = "";
+                byte[] dht = new byte[500];
                 int count = 0;
                 index++;
-                int upperLimit = index + 16;
-                for ( ;index < upperLimit; index++) {
-                    string currentByte = DHTValues[index];
-                    dht += currentByte + " ";
-                    count += Convert.ToInt32(currentByte, 16);
+                for (int j = 0 ; j < 16; index++, j++) {
+                    dht[j] = DHTFromFile[index];
+                    count += Convert.ToInt32(dht[j]);
                 }
-
-                
-
-                upperLimit = count + index;
-                for (; index < upperLimit; index++) {
-                    dht += DHTValues[index] + " ";
+              
+                for (int k = 16; index < count; index++, k++) {
+                    dht[k] += DHTFromFile[index];
                 }
                 DHTs.Add(dht);
             }
 
-            foreach (string dhT in DHTs) {
-                Console.WriteLine(dhT);
+            foreach (byte[] dhT in DHTs) {
+                foreach (byte b in dhT) {
+                    Console.Write(b + " ");
+                }         
             }
 
+            Console.WriteLine();
+
             List<HuffmanTree> huffmanTrees = new List<HuffmanTree>();
-            foreach (string table in DHTs) {
-                huffmanTrees.Add(new HuffmanTree(table));
-            }
+            //foreach (string table in DHTs) {
+            //    huffmanTrees.Add(new HuffmanTree(table));
+            //}
 
             return huffmanTrees;
         }
