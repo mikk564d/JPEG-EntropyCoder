@@ -59,6 +59,9 @@ namespace JPEG_EntropyCoder {
             if ( !firstMarkerInARow && nextTwoBytes.SequenceEqual( EOIMarker ) && !marker.SequenceEqual( EOIMarker ) )
                 return false;
 
+            if ( !markerIndexes.ContainsKey( marker ) )
+                markerIndexes.Add( marker, markerIndex );
+
             return true;
         }
 
