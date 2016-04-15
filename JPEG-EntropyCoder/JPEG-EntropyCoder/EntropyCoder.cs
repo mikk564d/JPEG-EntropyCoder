@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -12,7 +13,8 @@ namespace JPEG_EntropyCoder {
             HuffmanTrees = new List<HuffmanTree>();
             EntropyComponents = new List<EntropyComponent>();
             FileHandler = new JPEGFileHandler(path);
-
+            BinaryData = GetBinaryData(FileHandler);
+            //new byte[] { 0x00, 0x00, 0x03, 0x01, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x03, 0x04, 0x01, 0x00, 0x07 }
             HuffmanTrees = BuildHuffmanTrees(FileHandler.DHT);
             foreach (HuffmanTree huffmanTree in HuffmanTrees) {
                 Console.WriteLine("Huffmantree");
@@ -26,60 +28,54 @@ namespace JPEG_EntropyCoder {
             LumDC = 0, ChromDC = 1, LumAC = 2, ChromAC = 3
         }
 
-        //private int CurrentIndex { get; set; }
-        //private string BinaryData { get; set; }
+        private BitArray BinaryData { get; set; }
         private JPEGFileHandler FileHandler { get; }
         private List<HuffmanTree> HuffmanTrees { get; }
         public List<EntropyComponent> EntropyComponents { get; set; }
 
-        private List<HuffmanTree> BuildHuffmanTrees (byte[] DHTFromFile) {
-            
+        private List<HuffmanTree> BuildHuffmanTrees(byte[] DHTFromFile) {
+
             List<byte[]> DHTs = new List<byte[]>();
             int index = 0;
-            for (int i = 0; i < 4; i++) {
-                byte[] dht = new byte[500];
+            for (int i = 0; i < 1; i++) {
+                List<byte> dht = new List<byte>();
                 int count = 0;
                 index++;
-                for (int j = 0 ; j < 16; index++, j++) {
-                    dht[j] = DHTFromFile[index];
+                for (int j = 0; j < 16; index++, j++) {
+                    dht.Add(DHTFromFile[index]);
                     count += Convert.ToInt32(dht[j]);
                 }
-              
-                for (int k = 16; index < count; index++, k++) {
-                    dht[k] += DHTFromFile[index];
+
+                for (int k = 0; k < count; index++, k++) {
+                    dht.Add(DHTFromFile[index]);
                 }
-                DHTs.Add(dht);
+                DHTs.Add(dht.ToArray());
             }
-
-            foreach (byte[] dhT in DHTs) {
-                foreach (byte b in dhT) {
-                    Console.Write(b + " ");
-                }         
-            }
-
-            Console.WriteLine();
 
             List<HuffmanTree> huffmanTrees = new List<HuffmanTree>();
-            //foreach (string table in DHTs) {
-            //    huffmanTrees.Add(new HuffmanTree(table));
-            //}
+            foreach (byte[] table in DHTs) {
+                huffmanTrees.Add(new HuffmanTree(table));
+            }
 
             return huffmanTrees;
         }
 
-        private string GetBinaryData(JPEGFileHandler extractor) {
-            string data = extractor.CompressedImage;
-            StringBuilder sBuilder = new StringBuilder();
+        private BitArray GetBinaryData(JPEGFileHandler extractor) {
+            BitArray binData = new BitArray(0);
+            binData = Utility.ReverseBitArray(binData);
 
-            for (int i = 0; i < data.Length; i++) {
-                sBuilder.Append(Convert.ToString(Convert.ToInt32(data[i].ToString(), 16), 2).PadLeft(4, '0'));
+            for (int i = 0, j = binData.Count - 1; i < binData.Count; i++, j--) {
+                bool temp = binData[i];
+                binData[i] = binData[j];
+                binData[j] = temp;
             }
 
-            return sBuilder.ToString();
+
+            return binData;
         }
 
         public void Encode() {
-            FileHandler.CompressedImage = GetReEncodedData();
+            //FileHandler.CompressedImage = GetReEncodedData();
         }
 
         public void Decode() {
@@ -93,95 +89,55 @@ namespace JPEG_EntropyCoder {
 
 
         private void DecodeBinaryData() {
-            bool hitEOB = false;
-            int currentIndex = 0;
-
-            string binaryData = GetBinaryData(FileHandler);
-            int luminensSubsamling = 4;
+            int luminensSubsamling = 1;
             int chrominensSubsampling = 2;
 
-            while (currentIndex < binaryData.Length && binaryData.Length - currentIndex > 8) {
-                //DecodeBlock(luminensSubsamling, "luminens");
-                //DecodeBlock(chrominensSubsampling, "chrominens");
+            while (BinaryData.Count >= 8) {
+                DecodeBlock(luminensSubsamling, "luminens");
+                DecodeBlock(chrominensSubsampling, "chrominens");
+            }
+        }
 
-                int length;
-                string toCheck;
-                int count;
-                for (int i = 0; i < luminensSubsamling; i++) { 
-                    hitEOB = false;
-                    length = binaryData.Length - currentIndex > 31 ? 31 : binaryData.Length - currentIndex;
-                    toCheck = binaryData.Substring(currentIndex, length);
-                    DecodeHuffmanHexValue(toCheck ,HuffmanTable.LumDC, true, out count);
-                    currentIndex += count;
-                    for (int j = 0; j < 63 && !hitEOB; j++) {
-                        length = binaryData.Length - currentIndex > 31 ? 31 : binaryData.Length - currentIndex;
-                        toCheck = binaryData.Substring(currentIndex, length);
-                        hitEOB = DecodeHuffmanHexValue(toCheck, HuffmanTable.LumAC, false, out count);
-                        currentIndex += count;
-                    }
-                }
+        private void DecodeBlock(int subsampling, string typeTable) {
+            bool hitEOB = false;
+            HuffmanTable DC;
+            HuffmanTable AC;
 
-                for (int i = 0; i < chrominensSubsampling; i++) {
-                    hitEOB = false;
-                    length = binaryData.Length - currentIndex > 31 ? 31 : binaryData.Length - currentIndex;
-                    toCheck = binaryData.Substring(currentIndex, length);
-                    DecodeHuffmanHexValue(toCheck, HuffmanTable.ChromDC, true, out count);
-                    currentIndex += count;
-                    for (int j = 0; j < 63 && !hitEOB; j++) {
-                        length = binaryData.Length - currentIndex > 31 ? 31 : binaryData.Length - currentIndex;
-                        toCheck = binaryData.Substring(currentIndex, length);
-                        hitEOB = DecodeHuffmanHexValue(toCheck, HuffmanTable.ChromAC, false, out count);
-                        currentIndex += count;
-                    }
+            if (typeTable == "luminens") {
+                DC = HuffmanTable.LumDC;
+                AC = HuffmanTable.LumAC;
+            } else {
+                DC = HuffmanTable.ChromDC;
+                AC = HuffmanTable.ChromAC;
+            }
+
+            for (int i = 0; i < subsampling; i++) {
+                DecodeHuffmanHexValue(DC, true);
+                for (int j = 0; j < 63 && !hitEOB; j++) {
+                    hitEOB = DecodeHuffmanHexValue(AC, false);
                 }
             }
         }
 
-        //private void DecodeBlock(string binaryData, int subsampling, string typeTable) {
-        //    bool hitEOB = false;
-        //    HuffmanTable DC;
-        //    HuffmanTable AC;
+        private bool DecodeHuffmanHexValue(HuffmanTable table, bool isDC) {
+            byte huffmanLeafHexValue;
+            BitArray amplitude = new BitArray(16);
+            BitArray huffmanTreePath;
 
-        //    if (typeTable == "luminens") {
-        //        DC = HuffmanTable.LumDC;
-        //        AC = HuffmanTable.LumAC;
-        //    } else {
-        //        DC = HuffmanTable.ChromDC;
-        //        AC = HuffmanTable.ChromAC;
-        //    }
-        //    int length;
-        //    string toCheck;
-        //    for (int i = 0; i < subsampling; i++) {
-        //        length = binaryData.Length > 31 ? 31 : binaryData.Length - CurrentIndex;
-        //        toCheck = binaryData.Substring(CurrentIndex, length);
-        //        DecodeHuffmanHexValue(toCheck, DC, true);
-        //        for (int j = 0; j < 63 || !hitEOB; j++) {
-        //            length = binaryData.Length > 31 ? 31 : binaryData.Length - CurrentIndex;
-        //            toCheck = binaryData.Substring(CurrentIndex, length);
-        //            hitEOB = DecodeHuffmanHexValue(toCheck, AC, false);
-        //        }
-        //    }
-        //}
 
-        private bool DecodeHuffmanHexValue(string bitString ,HuffmanTable table, bool isDC, out int count) {
-            string huffmanLeafHexValue;
-            string amplitude;
-            string huffmanTreePath;
-            count = 0;
+            GetHuffmanLeafHexValue(out huffmanTreePath, out huffmanLeafHexValue, table);
+            BinaryData.Length -= huffmanTreePath.Length;
 
-            int length = bitString.Length > 16 ? 16 : bitString.Length;
-            string toCheck = bitString.Substring(0, length);
-            GetHuffmanLeafHexValue(toCheck ,out huffmanTreePath, out huffmanLeafHexValue, table);
-            count += huffmanTreePath.Length;
+            if (huffmanLeafHexValue != 0x00 || (table == HuffmanTable.ChromDC || table == HuffmanTable.LumDC)) {
+                int length = huffmanLeafHexValue % 16;
+                for (int i = BinaryData.Count - 1, j = 0; j < length; i--, j++) {
+                    amplitude[j] = BinaryData[i];
+                }
+                BinaryData.Length -= length;
 
-            if (huffmanLeafHexValue != "00" || (table == HuffmanTable.ChromDC || table == HuffmanTable.LumDC)) {
-                //amplitude = GetAmplitude(huffmanLeafHexValue);
-                int lenght = Convert.ToInt32(huffmanLeafHexValue[1].ToString(), 16);
-                amplitude = bitString.Substring(huffmanTreePath.Length, lenght);
-                count += amplitude.Length;
-
-                if (amplitude == "") {
-                    amplitude = "0";
+                if (amplitude.Count == 0) {
+                    amplitude.Length += 1;
+                    amplitude[0] = false;
                 }
 
                 if (isDC) {
@@ -197,63 +153,48 @@ namespace JPEG_EntropyCoder {
             return false;
         }
 
-        private void GetHuffmanLeafHexValue(string bitString ,out string currentHuffmanTreePath, out string huffmanLeafHexValue, HuffmanTable table) {
-            currentHuffmanTreePath = "";
-            huffmanLeafHexValue = "";
+        private void GetHuffmanLeafHexValue(out BitArray currentHuffmanTreePath, out byte huffmanLeafHexValue, HuffmanTable table) {
+            currentHuffmanTreePath = new BitArray(16);
+            huffmanLeafHexValue = 0xFF;
 
-            //while (huffmanLeafHexValue == "" && localCount < 16) {
-            //    currentHuffmanTreePath += BinaryData[];
-            //    huffmanLeafHexValue = HuffmanTrees[(int)table].Find(currentHuffmanTreePath);
-            //}
-
-            for (int i = 0; i < bitString.Length && huffmanLeafHexValue == ""; i++) {
-                currentHuffmanTreePath += bitString[i];
+            for (int i = 0, j = BinaryData.Count; i < 16 && huffmanLeafHexValue == 0xFF; i++, j--) {
+                currentHuffmanTreePath[i] = BinaryData[j];
                 huffmanLeafHexValue = HuffmanTrees[(int)table].Find(currentHuffmanTreePath);
             }
 
-            if (huffmanLeafHexValue == "") {
+            if (huffmanLeafHexValue == 0xFF) {
                 throw new BinaryPathNotFoundInHuffmanTreeException($"The path {currentHuffmanTreePath} was not found in {table} HuffmanTree.");
             }
         }
 
-        //private string GetAmplitude(string huffmanLeafHexValue) {
-        //    string amplitude = "";
-        //    int lenght = Convert.ToInt32(huffmanLeafHexValue[1].ToString(), 16);
+        //private string GetReEncodedData() {
+        //    string HexData = "";
 
-        //    for (int i = 0; i < lenght; i++, CurrentIndex++) {
-        //        amplitude += BinaryData[CurrentIndex];
+        //    StringBuilder sBuilder = new StringBuilder();
+
+        //    foreach (EntropyComponent entropyComponent in EntropyComponents) {
+        //        if ((entropyComponent is DCComponent && entropyComponent.HuffmanLeafHexValue == "00") || entropyComponent is EOBComponent) {
+        //            sBuilder.Append(entropyComponent.HuffmanTreePath);
+        //        } else {
+        //            sBuilder.Append(entropyComponent.HuffmanTreePath + ((ValueComponent)entropyComponent).Amplitude);
+        //        }
         //    }
-        //    return amplitude;
+
+        //    while (sBuilder.Length % 8 != 0) {
+        //        sBuilder.Append("1");
+        //    }
+
+        //    string binaryData = sBuilder.ToString();
+
+        //    sBuilder.Clear();
+
+        //    for (int i = 0; i < binaryData.Length; i += 4) {
+        //        sBuilder.Append(Convert.ToString(Convert.ToInt32(binaryData.Substring(i, 4), 2), 16));
+        //    }
+
+        //    HexData = sBuilder.ToString();
+
+        //    return HexData;
         //}
-
-        private string GetReEncodedData() {
-            string HexData = "";
-
-            StringBuilder sBuilder = new StringBuilder();
-
-            foreach (EntropyComponent entropyComponent in EntropyComponents) {
-                if ((entropyComponent is DCComponent && entropyComponent.HuffmanLeafHexValue == "00") || entropyComponent is EOBComponent) {
-                    sBuilder.Append(entropyComponent.HuffmanTreePath);
-                } else {
-                    sBuilder.Append(entropyComponent.HuffmanTreePath + entropyComponent.Amplitude);
-                }
-            }
-
-            while (sBuilder.Length % 8 != 0) {
-                sBuilder.Append("1");
-            }
-
-            string binaryData = sBuilder.ToString();
-
-            sBuilder.Clear();
-
-            for (int i = 0; i < binaryData.Length; i += 4) {
-                sBuilder.Append(Convert.ToString(Convert.ToInt32(binaryData.Substring(i, 4), 2), 16));
-            }
-
-            HexData = sBuilder.ToString();
-
-            return HexData;
-        }
     }
 }

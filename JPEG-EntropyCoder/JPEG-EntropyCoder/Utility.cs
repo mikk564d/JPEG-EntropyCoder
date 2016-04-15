@@ -9,17 +9,29 @@ namespace JPEG_EntropyCoder {
     public static class Utility {
         public static BitArray ReverseBitArray(BitArray bitArray) {
 
-            int len = bitArray.Count;
-            BitArray a = new BitArray(bitArray);
-            BitArray b = new BitArray(bitArray);
-
-            for (int i = 0, j = len - 1; i < len; ++i, --j) {
-                a[i] = a[i] ^ b[j];
-                b[j] = a[i] ^ b[j];
-                a[i] = a[i] ^ b[j];
+            for (int i = 0; i < bitArray.Count / 8; i++) {
+                for (int k = i * 8, j = (1 + i) * 8 - 1, count = 0; count < 4; ++k, --j, count++) {
+                    bool temp = bitArray[k];
+                    bitArray[k] = bitArray[j];
+                    bitArray[j] = temp;
+                }
             }
 
-            return a;
+            return bitArray;
+        }
+
+        public static bool CompareBitArray(BitArray ba1, BitArray ba2) {
+            if (ba1.Length != ba2.Length) {
+                return false;
+            }
+
+            for (int i = 0; i < ba1.Length; i++) {
+                if (ba1[i] != ba2[i]) {
+                    return false;
+                }
+            }
+
+            return true;
         }
     }
 }
