@@ -1,37 +1,47 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace JPEG_EntropyCoder {
-    class HuffmanNode {
+namespace JPEG_EntropyCoder
+{
+    class HuffmanNode
+    {
 
-        private static LinkedList<LinkedList<string>> DHTLists; //Contains the values for each level of the tree
+        private static LinkedList<LinkedList<byte>> DHTLists; //Contains the values for each level of the tree
 
-        private string Value;
-        private string Address;
-        private int Level;
-        private bool Leaf;
+        private byte Value { get; set; }
+        private BitArray Address { get; set; }
+        private int Level { get; set; }
+        private bool Leaf { get; set; }
 
-        private HuffmanNode Left;
-        private HuffmanNode Right;
+        private HuffmanNode LeftNode { get; set; }
+        private HuffmanNode RightNode { get; set; }
 
+        public HuffmanNode(BitArray binaddr, byte[] DHT = null)
+        {
 
-        public HuffmanNode(string binaddr, string DHT=null) {
-
-            if (DHT != null) {
-                this.populateLists(DHT);
+            if (DHT != null)
+            {
+                this.PopulateLists(DHT);
             }
-            
-            this.Level = binaddr.Length;
-            this.Address = binaddr;
 
-            this.makeMeLeaf();
+            Level = binaddr.Length;
+            Address = (BitArray)binaddr.Clone();
 
-            if (!this.Leaf && this.Level < 16) {
-                this.Left = new HuffmanNode(binaddr + "0");
-                this.Right = new HuffmanNode(binaddr + "1");
+            MakeMeLeaf();
+
+            if (!Leaf && Level < 16)
+            {
+                BitArray nextBinAdr = (BitArray)binaddr.Clone();
+
+                nextBinAdr.Length += 1;
+                nextBinAdr[nextBinAdr.Length - 1] = false;
+                LeftNode = new HuffmanNode(nextBinAdr);
+                nextBinAdr[nextBinAdr.Length - 1] = true;
+                RightNode = new HuffmanNode(nextBinAdr);
             }
         }
 
@@ -40,81 +50,113 @@ namespace JPEG_EntropyCoder {
         /// and adding any values that might be present for that level to that sublist.
         /// </summary>
         /// <param name="DHT">Must be a space separated string of individual hex-values.</param>
-        public void populateLists(string DHT) {
+        public void PopulateLists(byte[] DHT)
+        {
 
-            HuffmanNode.DHTLists = new LinkedList<LinkedList<string>> { };
-            string[] dhtsplit = DHT.Split(' ');
+            DHTLists = new LinkedList<LinkedList<byte>> { };
             int valueIndex = 16;
-            for (int i = 0; i < 16; i++) {
+            for (int i = 0; i < 16; i++)
+            {
 
-                int dhtamount = Convert.ToInt32(dhtsplit[i].ToString(), 16);
+                int dhtamount = DHT[i];
 
-                LinkedList<string> valuesList = new LinkedList<string> { };
-                for (int d = valueIndex; d < valueIndex + dhtamount; d++) {
-                    valuesList.AddLast(dhtsplit[d]);
+                LinkedList<byte> valuesList = new LinkedList<byte> { };
+                for (int d = valueIndex; d < valueIndex + dhtamount; d++)
+                {
+                    valuesList.AddLast(DHT[d]);
                 }
                 valueIndex += dhtamount;
-                HuffmanNode.DHTLists.AddLast(valuesList);
+                DHTLists.AddLast(valuesList);
             }
 
         }
 
-        public string SearchFor(string binAddr) {
+        public byte SearchFor(BitArray binAddr)
+        {
             //Takes a binary sequence by string and seraches for a value. 
             //If no leaf is found at that address, an empty string is returned.
-            if (this.Leaf) {
-                if (this.Address == binAddr) {
-                    return this.Value;
-                } else {
-                    return "";
+            if (Leaf)
+            {
+                if (CompareBitArray(Address, binAddr))
+                {
+                    return Value;
                 }
-            } else {
-                string result;
+                else {
+                    return 0xFF;
+                }
+            }
+            else {
+                byte result;
 
-                if (binAddr.Length <= this.Level) {
-                    result = "";
-                } else if (binAddr[this.Level] == '0') { // Go left 
-                    result = this.Left.SearchFor(binAddr);
-                } else {
-                    result = this.Right.SearchFor(binAddr);
+                if (binAddr.Length <= Level)
+                {
+                    // TODO describe 0xFF
+                    result = 0xFF;
+                }
+                else if (binAddr[Level] == false)
+                { // Go left 
+                    result = LeftNode.SearchFor(binAddr);
+                }
+                else {
+                    result = RightNode.SearchFor(binAddr);
                 }
                 return result;
             }
         }
 
-        public void printAddresses(ref List<string> result) {
-            
-            if (this.Leaf) {
-                result.Add(string.Format("{0} - {1}", this.Address, this.Value));
+        public static bool CompareBitArray(BitArray ba1, BitArray ba2)
+        {
+            if (ba1.Length != ba2.Length)
+            {
+                return false;
             }
 
-            if (this.Left != null) {
-                this.Left.printAddresses(ref result);
-            }
-            if (this.Right != null) {
-                this.Right.printAddresses(ref result);
+            for (int i = 0; i < ba1.Length; i++)
+            {
+                if (ba1[i] != ba2[i])
+                {
+                    return false;
+                }
             }
 
+            return true;
         }
 
+        public void PrintAddresses(ref List<string> result)
+        {
 
-        private LinkedList<string> levelList() {
+            if (Leaf)
+            {
+                string addressStr = "";
+                foreach (bool b in Address)
+                {
+                    addressStr += b ? "1" : "0";
+                }
+
+                result.Add($"{addressStr} - {Value}");
+            }
+
+            LeftNode?.PrintAddresses(ref result);
+            RightNode?.PrintAddresses(ref result);
+        }
+
+        private LinkedList<byte> LevelList()
+        {
             // returns the list of values for the treelevel of this node.
-            return HuffmanNode.DHTLists.ElementAt(this.Level - 1);
+            return DHTLists.ElementAt(Level - 1);
         }
 
-
-
-        private void makeMeLeaf() {
+        private void MakeMeLeaf()
+        {
             //Tries to convert this node into a leaf and assign it a value.
-            if (this.Level - 1 >= 0 && this.levelList().Count() > 0) {
+            if (Level > 0 && LevelList().Any())
+            {
 
-                this.Value = this.levelList().First.Value;
-                this.Leaf = true;
-                this.levelList().RemoveFirst();
-            } 
+                Value = LevelList().First.Value;
+                Leaf = true;
+                LevelList().RemoveFirst();
+            }
         }
-
     }
 }
 

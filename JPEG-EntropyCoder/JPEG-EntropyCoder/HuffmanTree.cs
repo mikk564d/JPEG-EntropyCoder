@@ -1,26 +1,31 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace JPEG_EntropyCoder {
-    public class HuffmanTree : IHuffmanTree {
+namespace JPEG_EntropyCoder
+{
+    public class HuffmanTree : IHuffmanTree
+    {
 
-        public string DHT { get; }
+        public byte[] DHT { get; }
+        private HuffmanNode Root { get; }
 
-        private HuffmanNode tree;
-
-        public HuffmanTree(string DHT) {
+        public HuffmanTree(byte[] DHT)
+        {
             this.DHT = DHT;
-            this.tree = new HuffmanNode("", DHT);
+            Root = new HuffmanNode(new BitArray(0), DHT);
         }
 
-        public string Find(string treePath) {
-            return this.tree.SearchFor(treePath);
+        public byte Find(BitArray treePath)
+        {
+            return Root.SearchFor(treePath);
         }
 
-        public List<string> PrintTree() {
+        public List<string> PrintTree()
+        {
             List<string> result = new List<string> { };
-            this.tree.printAddresses(ref result);
+            Root.PrintAddresses(ref result);
             return result;
         }
     }
