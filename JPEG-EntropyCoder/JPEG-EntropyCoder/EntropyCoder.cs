@@ -35,7 +35,6 @@ namespace JPEG_EntropyCoder {
         public List<EntropyComponent> EntropyComponents { get; set; }
 
         private List<HuffmanTree> BuildHuffmanTrees(byte[] DHTFromFile) {
-
             List<byte[]> DHTs = new List<byte[]>();
             int index = 0;
             for (int i = 0; i < 4; i++) {

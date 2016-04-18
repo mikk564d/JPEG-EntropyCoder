@@ -35,6 +35,9 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="JPEG-EntropyCoder">
+      <HintPath>..\JPEG-EntropyCoder\bin\Debug\JPEG-EntropyCoder.dll</HintPath>
+    </Reference>
     <Reference Include="nunit.framework, Version=3.2.0.0, Culture=neutral, PublicKeyToken=2638cd05610744eb, processorArchitecture=MSIL" />
     <Reference Include="System" />
   </ItemGroup>
@@ -51,14 +54,9 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
+    <Compile Include="EntropyCoderTests.cs" />
     <Compile Include="JPEGFileHandlerTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\JPEG-EntropyCoder\JPEG-EntropyCoder.csproj">
-      <Project>{24f4ffca-d7c3-43a1-9fa0-6b058899a4e7}</Project>
-      <Name>JPEG-EntropyCoder</Name>
-    </ProjectReference>
   </ItemGroup>
   <Choose>
     <When Condition="'$(VisualStudioVersion)' == '10.0' And '$(IsCodedUITest)' == 'True'">
