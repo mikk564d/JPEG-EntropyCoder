@@ -54,6 +54,12 @@
     <Compile Include="JPEGFileHandlerTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\JPEG-EntropyCoder\JPEG-EntropyCoder.csproj">
+      <Project>{24f4ffca-d7c3-43a1-9fa0-6b058899a4e7}</Project>
+      <Name>JPEG-EntropyCoder</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Choose>
     <When Condition="'$(VisualStudioVersion)' == '10.0' And '$(IsCodedUITest)' == 'True'">
       <ItemGroup>
