@@ -76,11 +76,17 @@ namespace JPEG_EntropyCoder {
         }
 
         private uint FindCompressedImageIndex( uint startIndex = 0 ) {
+            /* Caching of compressedImageIndex */
+            if ( compressedImageIndex != 0 )
+                return compressedImageIndex;
+
             uint SOSMarkerIndex;
             FindMarkerIndex( SOSMarker, out SOSMarkerIndex, startIndex );
             uint lengthOfField = CalculateLengthOfField( SOSMarker, SOSMarkerIndex );
 
-            return SOSMarkerIndex + MARKER_LENGTH + LENGTH_OF_FIELD_LENGTH + lengthOfField;
+            compressedImageIndex = SOSMarkerIndex + MARKER_LENGTH + LENGTH_OF_FIELD_LENGTH + lengthOfField;
+
+            return compressedImageIndex;
         }
 
         private byte[] GetCompressedImageBytes() {
@@ -150,9 +156,15 @@ namespace JPEG_EntropyCoder {
                 if ( compressedImageIsSet && value.Length != _compressedImage.Length )
                     throw new ArgumentException( "Argument length is not equal to property length and thus cannot be set." );
 
-                uint compressedImageIndex = FindCompressedImageIndex();
+                if ( compressedImageIsSet ) {
+                    uint compressedImageIndex = FindCompressedImageIndex();
 
-                All = All
+                    for ( uint i = 0, j = compressedImageIndex; i < value.Length; i++, j++ ) {
+                        All[ j ] = value[ i ];
+                    }
+                }
+
+                compressedImageIsSet = true;
 
                 _compressedImage = value;
             }
@@ -167,6 +179,8 @@ namespace JPEG_EntropyCoder {
 
                 if ( allIsSet && value.Length != _all.Length )
                     throw new ArgumentException( "Argument length is not equal to property length and thus cannot be set." );
+
+                allIsSet = true;
 
                 _all = value;
             }
