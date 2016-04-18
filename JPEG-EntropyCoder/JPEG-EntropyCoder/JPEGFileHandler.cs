@@ -62,6 +62,10 @@ namespace JPEG_EntropyCoder {
         private byte[] GetFieldBytes( byte[] marker ) {
             uint markerIndex;
             FindMarkerIndex( marker, out markerIndex );
+
+            if ( fileContainsThumbnail && markerIndex >= thumbnailStartIndex && markerIndex <= thumbnailEndIndex )
+                FindMarkerIndex( marker, out markerIndex, thumbnailEndIndex + MARKER_LENGTH );
+
             uint lengthOfField = CalculateLengthOfField( marker, markerIndex );
             uint fieldBytesIndex = markerIndex + MARKER_LENGTH + LENGTH_OF_FIELD_LENGTH;
             byte[] fields = _all.Skip( Convert.ToInt32( fieldBytesIndex ) ).Take( Convert.ToInt32( lengthOfField ) ).ToArray();
@@ -91,18 +95,24 @@ namespace JPEG_EntropyCoder {
 
         private byte[] GetCompressedImageBytes() {
             uint compressedImageBytesIndex = FindCompressedImageIndex();
+
+            if ( fileContainsThumbnail && compressedImageBytesIndex >= thumbnailStartIndex &&
+                 compressedImageBytesIndex <= thumbnailEndIndex )
+                compressedImageBytesIndex = FindCompressedImageIndex( thumbnailEndIndex + MARKER_LENGTH );
+
             uint EOIMarkerIndex;
             FindMarkerIndex( EOIMarker, out EOIMarkerIndex, compressedImageBytesIndex );
             
             return _all.Skip( Convert.ToInt32( compressedImageBytesIndex ) ).Take( Convert.ToInt32( EOIMarkerIndex - compressedImageBytesIndex ) ).ToArray();
         }
-        /*
-        private bool FindThumbnail(out int startIndex, out int endIndex) {
-            int firstSOIIndex;
+        
+        private void FindThumbnail(out uint startIndex, out uint endIndex) {
+            uint firstSOIIndex;
+            FindMarkerIndex( SOIMarker, out firstSOIIndex );
 
-            return true;
+            fileContainsThumbnail = FindMarkerIndex( SOIMarker, out startIndex, firstSOIIndex + MARKER_LENGTH, false );
+            FindMarkerIndex( EOIMarker, out endIndex );
         }
-        */
 
         private byte[] _DQT;
         public byte[] DQT {
@@ -205,6 +215,7 @@ namespace JPEG_EntropyCoder {
             SOF = GetFieldBytes( SOF0Marker );
             SOS = GetFieldBytes( SOSMarker );
             CompressedImage = GetCompressedImageBytes();
+            FindThumbnail( out thumbnailStartIndex, out thumbnailEndIndex );
         }
 
         /// <summary>
