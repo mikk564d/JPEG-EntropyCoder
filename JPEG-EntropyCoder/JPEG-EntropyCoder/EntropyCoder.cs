@@ -132,7 +132,7 @@ namespace JPEG_EntropyCoder {
             BitArray huffmanTreePath;
 
 
-            GetHuffmanLeafHexValue(out huffmanTreePath, out huffmanLeafHexValue, table);
+            GetByteFromHuffmantree(out huffmanTreePath, out huffmanLeafHexValue, table);
             BinaryData.Length -= huffmanTreePath.Length;
 
             if (huffmanLeafHexValue != 0x00 || (table == HuffmanTable.ChromDC || table == HuffmanTable.LumDC)) {
@@ -160,7 +160,7 @@ namespace JPEG_EntropyCoder {
             return false;
         }
 
-        private void GetHuffmanLeafHexValue(out BitArray currentHuffmanTreePath, out byte huffmanLeafHexValue, HuffmanTable table) {
+        private void GetByteFromHuffmantree(out BitArray currentHuffmanTreePath, out byte huffmanLeafHexValue, HuffmanTable table) {
             currentHuffmanTreePath = new BitArray(16);
             huffmanLeafHexValue = 0xFF;
 
