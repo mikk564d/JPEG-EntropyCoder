@@ -21,27 +21,15 @@ namespace JPEG_EntropyCoder {
         private readonly byte[] SOF2Marker = { MARKER_PREFIX, 0xC2 };
         private readonly byte[] SOSMarker = { MARKER_PREFIX, 0xDA };
         private readonly byte[] EOIMarker = { MARKER_PREFIX, 0xD9 };
-
+        
+        private bool compressedImageIsSet;
+        private bool allIsSet;
         private bool fileContainsThumbnail;
         private uint thumbnailStartIndex;
         private uint thumbnailEndIndex;
-        private Dictionary<byte[], uint> markerIndexes = new Dictionary<byte[], uint>();
-
-        private string RemoveDashes(string s) {
-            return s.Replace( "-", "" );
-        }
-
-        private string ReplaceDashesWithSpaces(string s) {
-            return s.Replace("-", " ");
-        }
+        private uint compressedImageIndex;
 
         private bool FindMarkerIndex(byte[] marker, out uint markerIndex, uint startIndex = 0, bool firstMarkerInARow = true) {
-            /* Caching */
-            //if ( markerIndexes.ContainsKey( marker ) ) {
-            //    markerIndex = markerIndexes[ marker ];
-            //    return true;
-            //}
-
             uint index = startIndex;
             byte[] nextTwoBytes = { _all[ index ], _all[ index + 1 ] };
 
@@ -58,9 +46,6 @@ namespace JPEG_EntropyCoder {
 
             if ( !firstMarkerInARow && nextTwoBytes.SequenceEqual( EOIMarker ) && !marker.SequenceEqual( EOIMarker ) )
                 return false;
-
-            if ( !markerIndexes.ContainsKey( marker ) )
-                markerIndexes.Add( marker, markerIndex );
 
             return true;
         }
@@ -90,11 +75,16 @@ namespace JPEG_EntropyCoder {
             return fields;
         }
 
-        private byte[] GetCompressedImageBytes() {
+        private uint FindCompressedImageIndex( uint startIndex = 0 ) {
             uint SOSMarkerIndex;
-            FindMarkerIndex( SOSMarker, out SOSMarkerIndex );
+            FindMarkerIndex( SOSMarker, out SOSMarkerIndex, startIndex );
             uint lengthOfField = CalculateLengthOfField( SOSMarker, SOSMarkerIndex );
-            uint compressedImageBytesIndex = SOSMarkerIndex + MARKER_LENGTH + LENGTH_OF_FIELD_LENGTH + lengthOfField;
+
+            return SOSMarkerIndex + MARKER_LENGTH + LENGTH_OF_FIELD_LENGTH + lengthOfField;
+        }
+
+        private byte[] GetCompressedImageBytes() {
+            uint compressedImageBytesIndex = FindCompressedImageIndex();
             uint EOIMarkerIndex;
             FindMarkerIndex( EOIMarker, out EOIMarkerIndex, compressedImageBytesIndex );
             
@@ -106,20 +96,12 @@ namespace JPEG_EntropyCoder {
 
             return true;
         }
-
-        private void SetFieldBytes(byte[] marker, byte[] bytes) {
-            int markerIndex = FindMarkerIndex( marker );
-            int lengthOfField = CalculateLengthOfField( marker, markerIndex );
-            string[] splitBytes = bytes.Split( ' ' );
-
-            
-
-        }*/
+        */
 
         private byte[] _DQT;
         public byte[] DQT {
             get { return _DQT; }
-            set {
+            private set {
                 if (value == null)
                     throw new ArgumentNullException();
                 _DQT = value;
@@ -129,7 +111,7 @@ namespace JPEG_EntropyCoder {
         private byte[] _DHT;
         public byte[] DHT {
             get { return _DHT; }
-            set {
+            private set {
                 if ( value == null )
                     throw new ArgumentNullException();
                 _DHT = value;
@@ -139,7 +121,7 @@ namespace JPEG_EntropyCoder {
         private byte[] _SOF;
         public byte[] SOF {
             get { return _SOF; }
-            set {
+            private set {
                 if ( value == null )
                     throw new ArgumentNullException();
                 _SOF = value;
@@ -149,7 +131,7 @@ namespace JPEG_EntropyCoder {
         private byte[] _SOS;
         public byte[] SOS {
             get { return _SOS; }
-            set {
+            private set {
                 if ( value == null )
                     throw new ArgumentNullException();
                 _SOS = value;
@@ -164,6 +146,14 @@ namespace JPEG_EntropyCoder {
             set {
                 if ( value == null )
                     throw new ArgumentNullException();
+
+                if ( compressedImageIsSet && value.Length != _compressedImage.Length )
+                    throw new ArgumentException( "Argument length is not equal to property length and thus cannot be set." );
+
+                uint compressedImageIndex = FindCompressedImageIndex();
+
+                All = All
+
                 _compressedImage = value;
             }
         }
@@ -174,6 +164,10 @@ namespace JPEG_EntropyCoder {
             set {
                 if ( value == null )
                     throw new ArgumentNullException();
+
+                if ( allIsSet && value.Length != _all.Length )
+                    throw new ArgumentException( "Argument length is not equal to property length and thus cannot be set." );
+
                 _all = value;
             }
         }
