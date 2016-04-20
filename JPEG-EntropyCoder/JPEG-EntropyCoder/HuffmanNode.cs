@@ -45,7 +45,7 @@ namespace JPEG_EntropyCoder {
         /// and adding any values that might be present for that level to that sublist.
         /// </summary>
         /// <param name="DHT">Must be a space separated string of individual hex-values.</param>
-        public void PopulateLists(byte[] DHT) {
+        private void PopulateLists(byte[] DHT) {
 
             DHTLists = new LinkedList<LinkedList<byte>> { };
             int valueIndex = 16;
@@ -87,7 +87,7 @@ namespace JPEG_EntropyCoder {
             }
         }
 
-        public static bool CompareBitArray(BitArray ba1, BitArray ba2) {
+        private static bool CompareBitArray(BitArray ba1, BitArray ba2) {
             if (ba1.Length != ba2.Length) {
                 return false;
             }
