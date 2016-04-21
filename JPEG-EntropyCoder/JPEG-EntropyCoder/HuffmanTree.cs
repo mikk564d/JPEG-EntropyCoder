@@ -14,7 +14,7 @@ namespace JPEG_EntropyCoder {
             Root = new HuffmanNode(new BitArray(0), DHT);
         }
         /// <summary>
-        /// 
+        /// Attempts to find a leaf at the supplied path.
         /// </summary>
         /// <param name="treePath">Only the first 16 bits will be used for leaf address lookup.</param>
         /// <returns></returns>
