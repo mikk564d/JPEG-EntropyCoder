@@ -9,93 +9,23 @@ using JPEG_EntropyCoder.Interfaces;
 
 namespace JPEG_EntropyCoder {
     public class EntropyCoder : IEntropyCoder {
-        public EntropyCoder(string path) {
-            HuffmanTrees = new List<HuffmanTree>();
+        public EntropyCoder(List<HuffmanTree> huffmanTrees, BitArray binaryData) {
+            HuffmanTrees = huffmanTrees;
             EntropyComponents = new List<EntropyComponent>();
-            FileHandler = new JPEGFileHandler(path);
-            BinaryData = GetBinaryData(FileHandler);
-
-            HuffmanTrees = BuildHuffmanTrees(FileHandler.DHT);
-            foreach (HuffmanTree huffmanTree in HuffmanTrees) {
-                Console.WriteLine("Huffmantree");
-                foreach (string s in huffmanTree.PrintTree()) {
-                    Console.WriteLine(s);
-                }
-            }
+            BinaryData = binaryData;
+            DecodeBinaryData();
         }
 
-        enum HuffmanTable {
-            LumDC = 0, ChromDC = 1, LumAC = 2, ChromAC = 3
-        }
-
-        private BitArray BinaryData { get; set; }
-        private JPEGFileHandler FileHandler { get; }
-        private List<HuffmanTree> HuffmanTrees { get; }
         public List<EntropyComponent> EntropyComponents { get; set; }
+        private List<HuffmanTree> HuffmanTrees { get; }
+        private BitArray BinaryData { get; }
 
-        private List<HuffmanTree> BuildHuffmanTrees(byte[] DHTFromFile) {
-            List<byte[]> DHTs = new List<byte[]>() { new byte[0] , new byte[0] , new byte[0] , new byte[0] };
-            int index = 0;
-            for (int i = 0; i < 4; i++) {
-                List<byte> dht = new List<byte>();
-                int count = 0;
-                HuffmanTable huffmanTree;
-                if (DHTFromFile[index] < 16) {
-                    huffmanTree = DHTFromFile[index] % 16 == 0 ? HuffmanTable.LumDC : HuffmanTable.ChromDC;
-                } else {
-                    huffmanTree = DHTFromFile[index] % 16 == 0 ? HuffmanTable.LumAC : HuffmanTable.ChromAC;
-                }
-                index++;
-                for (int j = 0; j < 16; index++, j++) {
-                    dht.Add(DHTFromFile[index]);
-                    count += Convert.ToInt32(dht[j]);
-                }
 
-                for (int k = 0; k < count; index++, k++) {
-                    dht.Add(DHTFromFile[index]);
-                }
-                DHTs[(int) huffmanTree] = dht.ToArray();
-            }
-
-            List<HuffmanTree> huffmanTrees = new List<HuffmanTree>();
-            foreach (byte[] table in DHTs) {
-                huffmanTrees.Add(new HuffmanTree(table));
-            }
-
-            return huffmanTrees;
+        public BitArray EncodeToBitArray() {
+            return new BitArray(EncodeToByteArray());
         }
 
-        private BitArray GetBinaryData(JPEGFileHandler extractor) {
-            byte[] bytesFromFile = extractor.CompressedImage;
-            //Console.WriteLine(BitConverter.ToString(bytesFromFile));
-            List<byte> bytes = new List<byte>();
-
-            bytes.Add(bytesFromFile[0]);
-            for (int i = 1; i < bytesFromFile.Length; i++) {
-                if (!(bytesFromFile[i] == 0x00  && bytesFromFile[i - 1] == 0xFF)) {
-                    bytes.Add(bytesFromFile[i]);
-                } 
-            }
-
-            //Console.WriteLine(BitConverter.ToString(bytes.ToArray()));
-
-            BitArray binData = new BitArray(bytes.ToArray());
-            binData = Utility.ReverseBitArray(binData);
-
-            for (int i = 0, j = binData.Count - 1; i < binData.Count / 2; i++, j--) {
-                bool temp = binData[i];
-                binData[i] = binData[j];
-                binData[j] = temp;
-            }
-
-            return binData;
-        }
-
-        public BitArray GetDataAsBitArray() {
-            return new BitArray(GetDataAsByteArray());
-        }
-
-        public byte[] GetDataAsByteArray() {
+        public byte[] EncodeToByteArray() {
             int currentIndex = 0;
 
             BitArray bits = new BitArray(0);
@@ -119,7 +49,7 @@ namespace JPEG_EntropyCoder {
                 }
             }
 
-            while (bits.Count % 8 == 0) {
+            while (bits.Count % 8 != 0) {
                 bits.Length++;
             }
 
@@ -138,34 +68,22 @@ namespace JPEG_EntropyCoder {
             return bytes.ToArray();
         }
 
-        public void Encode() {
-            FileHandler.CompressedImage = GetDataAsByteArray();
-        }
-
-        public void Decode() {
-            DecodeBinaryData();
-        }
-
-        public void Save(string path) {
-            FileHandler.SaveFile(path);
-        }
-
 
         private void DecodeBinaryData() {
             int luminensSubsamling = 4;
             int chrominensSubsampling = 2;
 
             while (BinaryData.Count >= 8) {
-                DecodeBlock(luminensSubsamling, "luminens");
-                DecodeBlock(chrominensSubsampling, "chrominens");
+                DecodeBlock(luminensSubsamling, HuffmanTable.Luminens);
+                DecodeBlock(chrominensSubsampling, HuffmanTable.Chrominens);
             }
         }
 
-        private void DecodeBlock(int subsampling, string typeTable) {
+        private void DecodeBlock(int subsampling, HuffmanTable typeTable) {
             HuffmanTable DC;
             HuffmanTable AC;
 
-            if (typeTable == "luminens") {
+            if (typeTable == HuffmanTable.Luminens) {
                 DC = HuffmanTable.LumDC;
                 AC = HuffmanTable.LumAC;
             } else {

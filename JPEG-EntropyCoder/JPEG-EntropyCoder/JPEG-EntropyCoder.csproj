@@ -50,6 +50,7 @@
     <Compile Include="Exceptions\MarkerNotFoundException.cs" />
     <Compile Include="HuffmanNode.cs" />
     <Compile Include="HuffmanTree.cs" />
+    <Compile Include="HuffmanTreeType.cs" />
     <Compile Include="Interfaces\IEntropyCoder.cs" />
     <Compile Include="Interfaces\IHuffmanTree.cs" />
     <Compile Include="Interfaces\IJPEGEntropyCoder.cs" />
