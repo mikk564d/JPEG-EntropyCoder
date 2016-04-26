@@ -186,7 +186,7 @@ namespace JPEG_EntropyCoder {
         /// Contains DQT bytes from the JPEG file.
         /// </summary>
         public byte[] DQT {
-            get { return _DQT; }
+            get { return Array.AsReadOnly( _DQT ).ToArray(); }
             private set {
                 Contract.Requires<ArgumentNullException>( value != null );
                 Contract.Requires<ArgumentException>( value.Length > 0 );
@@ -200,7 +200,7 @@ namespace JPEG_EntropyCoder {
         /// Contains DHT bytes from the JPEG file.
         /// </summary>
         public byte[] DHT {
-            get { return _DHT; }
+            get { return Array.AsReadOnly( _DHT ).ToArray(); }
             private set {
                 Contract.Requires<ArgumentNullException>( value != null );
                 Contract.Requires<ArgumentException>( value.Length > 0 );
@@ -214,7 +214,7 @@ namespace JPEG_EntropyCoder {
         /// Contains SOF bytes from the JPEG file.
         /// </summary>
         public byte[] SOF {
-            get { return _SOF; }
+            get { return Array.AsReadOnly( _SOF ).ToArray(); }
             private set {
                 Contract.Requires<ArgumentNullException>( value != null );
                 Contract.Requires<ArgumentException>( value.Length > 0 );
@@ -228,7 +228,7 @@ namespace JPEG_EntropyCoder {
         /// Contains SOS bytes from the JPEG file.
         /// </summary>
         public byte[] SOS {
-            get { return _SOS; }
+            get { return Array.AsReadOnly( _SOS ).ToArray(); }
             private set {
                 Contract.Requires<ArgumentNullException>( value != null );
                 Contract.Requires<ArgumentException>( value.Length > 0 );
@@ -242,9 +242,7 @@ namespace JPEG_EntropyCoder {
         /// Contains compressed image bytes from the JPEG file.
         /// </summary>
         public byte[] CompressedImage {
-            get {
-                return _compressedImage;
-            }
+            get { return Array.AsReadOnly( _compressedImage ).ToArray(); }
             set {
                 Contract.Requires<ArgumentNullException>( value != null );
                 Contract.Requires<ArgumentException>( value.Length > 0 );
@@ -271,9 +269,8 @@ namespace JPEG_EntropyCoder {
         /// Contains all bytes from the JPEG file.
         /// </summary>
         public byte[] All {
-            get { return _all; }
-            set {
-                allIsSet = true;
+            get { return Array.AsReadOnly( _all ).ToArray(); }
+            private set {
                 Contract.Requires<ArgumentNullException>( value != null );
                 Contract.Requires<ArgumentException>( value.Length > 1 );
 
