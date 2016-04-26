@@ -41,7 +41,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Components\ACComponent.cs" />
-    <Compile Include="Components\ValueComponent.cs" />
+    <Compile Include="Components\EntropyValueComponent.cs" />
     <Compile Include="EntropyCoder.cs" />
     <Compile Include="Components\DCComponent.cs" />
     <Compile Include="Components\EntropyComponent.cs" />
@@ -50,10 +50,13 @@
     <Compile Include="Exceptions\MarkerNotFoundException.cs" />
     <Compile Include="HuffmanNode.cs" />
     <Compile Include="HuffmanTree.cs" />
+    <Compile Include="HuffmanTreeType.cs" />
     <Compile Include="Interfaces\IEntropyCoder.cs" />
     <Compile Include="Interfaces\IHuffmanTree.cs" />
+    <Compile Include="Interfaces\IJPEGEntropyCoder.cs" />
     <Compile Include="Interfaces\IJPEGFileHandler.cs" />
     <Compile Include="Interfaces\IRunLengthCoder.cs" />
+    <Compile Include="JPEGEntropyCoder.cs" />
     <Compile Include="JPEGFileHandler.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Utility.cs" />

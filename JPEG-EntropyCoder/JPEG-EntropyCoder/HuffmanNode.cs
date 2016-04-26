@@ -45,7 +45,7 @@ namespace JPEG_EntropyCoder {
         /// and adding any values that might be present for that level to that sublist.
         /// </summary>
         /// <param name="DHT">Must be a space separated string of individual hex-values.</param>
-        public void PopulateLists(byte[] DHT) {
+        private void PopulateLists(byte[] DHT) {
 
             DHTLists = new LinkedList<LinkedList<byte>> { };
             int valueIndex = 16;
@@ -63,11 +63,14 @@ namespace JPEG_EntropyCoder {
 
         }
 
-        public byte SearchFor(BitArray binAddr) {
-            //Takes a binary sequence by string and seraches for a value. 
-            //If no leaf is found at that address, an empty string is returned.
+        /// <summary>
+        /// Takes a binary sequence by string and seraches for a value.
+        /// </summary>
+        /// <param name="binAddr">The address to search for. Can be incomplete.</param>
+        /// <returns>If a matching leaf is found it's value is returned. If no leaf is found, 0XFF is returned.</returns>
+        public byte SearchFor(BitArray binAddr) { 
             if (Leaf) {
-                if (CompareBitArray(Address, binAddr)) {
+                if (Utility.CompareBitArray(Address, binAddr)) {
                     return Value;
                 } else {
                     return 0xFF;
@@ -87,20 +90,11 @@ namespace JPEG_EntropyCoder {
             }
         }
 
-        public static bool CompareBitArray(BitArray ba1, BitArray ba2) {
-            if (ba1.Length != ba2.Length) {
-                return false;
-            }
 
-            for (int i = 0; i < ba1.Length; i++) {
-                if (ba1[i] != ba2[i]) {
-                    return false;
-                }
-            }
-
-            return true;
-        }
-
+        /// <summary>
+        /// Adds the value and address of all leafs recursively to the referenced list of strings
+        /// </summary>
+        /// <param name="result">Must be passed as reference. No order in result is guaranteed.</param>
         public void PrintAddresses(ref List<string> result) {
 
             if (Leaf) {
@@ -116,13 +110,21 @@ namespace JPEG_EntropyCoder {
             RightNode?.PrintAddresses(ref result);
         }
 
+        /// <summary>
+        /// Finds the appropriate list of DHT values for the level of this object.
+        /// </summary>
+        /// <returns>The list of byte values at the calling objects level in the tree</returns>
         private LinkedList<byte> LevelList() {
             // returns the list of values for the treelevel of this node.
             return DHTLists.ElementAt(Level - 1);
         }
 
+        /// <summary>
+        /// Tries to convert this node into a leaf and assign it a value.
+        /// If successfull the assigned value is also removed from the DHTLists
+        /// To check if the method was successfull, check the Leaf property of the object.
+        /// </summary>
         private void MakeMeLeaf() {
-            //Tries to convert this node into a leaf and assign it a value.
             if (Level > 0 && LevelList().Any()) {
 
                 Value = LevelList().First.Value;
