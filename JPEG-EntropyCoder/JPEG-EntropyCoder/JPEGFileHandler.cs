@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
 using JPEG_EntropyCoder.Exceptions;
@@ -37,6 +38,9 @@ namespace JPEG_EntropyCoder {
                 index++;
                 nextTwoBytes[ 0 ] = _all[ index ];
                 nextTwoBytes[ 1 ] = _all[ index + 1 ];
+            Contract.Requires<ArgumentNullException>( dictionary != null );
+            Contract.Requires<ArgumentNullException>( bytes != null );
+            Contract.Requires<ArgumentException>( bytes.Length > 1 );
             }
 
             markerIndex = index;
@@ -74,6 +78,8 @@ namespace JPEG_EntropyCoder {
                 lengthOfField = CalculateLengthOfField( marker, markerIndex );
                 fieldBytesIndex = markerIndex + MARKER_LENGTH + LENGTH_OF_FIELD_LENGTH;
                 fields = fields.Concat( _all.Skip( Convert.ToInt32( fieldBytesIndex ) ).Take( Convert.ToInt32( lengthOfField ) ) ).ToArray();
+            Contract.Requires<ArgumentNullException>( dictionary != null );
+            Contract.Requires<ArgumentException>( dictionary[ SOI_MARKER ].Count > 0 );
             }
 
             return fields;
@@ -89,6 +95,12 @@ namespace JPEG_EntropyCoder {
             uint lengthOfField = CalculateLengthOfField( SOSMarker, SOSMarkerIndex );
 
             compressedImageIndex = SOSMarkerIndex + MARKER_LENGTH + LENGTH_OF_FIELD_LENGTH + lengthOfField;
+            Contract.Requires<ArgumentNullException>( dictionary != null );
+            Contract.Requires<ArgumentException>( dictionary[ marker ].Count > 0 );
+            Contract.Requires<ArgumentNullException>( bytes != null );
+            Contract.Requires<ArgumentException>( bytes.Length > 1 );
+            Contract.Requires<ArgumentException>( marker == DQT_MARKER || marker == DHT_MARKER || marker == SOF0_MARKER || marker == SOF2_MARKER || marker == SOS_MARKER );
+            Contract.Requires<ArgumentException>( dictionaryMarkerIndex > -1 && dictionaryMarkerIndex < dictionary[ marker ].Count );
 
             return compressedImageIndex;
         }
@@ -99,6 +111,11 @@ namespace JPEG_EntropyCoder {
             if ( fileContainsThumbnail && compressedImageBytesIndex >= thumbnailStartIndex &&
                  compressedImageBytesIndex <= thumbnailEndIndex )
                 compressedImageBytesIndex = FindCompressedImageIndex( thumbnailEndIndex + MARKER_LENGTH );
+            Contract.Requires<ArgumentNullException>( dictionary != null );
+            Contract.Requires<ArgumentException>( dictionary[ marker ].Count > 0 );
+            Contract.Requires<ArgumentNullException>( bytes != null );
+            Contract.Requires<ArgumentException>( bytes.Length > 0 );
+            Contract.Requires<ArgumentException>( marker == DQT_MARKER || marker == DHT_MARKER || marker == SOF0_MARKER || marker == SOF2_MARKER || marker == SOS_MARKER );
 
             uint EOIMarkerIndex;
             FindMarkerIndex( EOIMarker, out EOIMarkerIndex, compressedImageBytesIndex );
@@ -112,14 +129,19 @@ namespace JPEG_EntropyCoder {
 
             fileContainsThumbnail = FindMarkerIndex( SOIMarker, out startIndex, firstSOIIndex + MARKER_LENGTH, false );
             FindMarkerIndex( EOIMarker, out endIndex );
+            Contract.Requires<ArgumentException>( dictionary[ SOS_MARKER ].Count > 0 );
+            Contract.Requires<ArgumentException>( dictionary[ EOI_MARKER ].Count > 0 );
+            Contract.Requires<ArgumentNullException>( bytes != null );
+            Contract.Requires<ArgumentException>( bytes.Length > 0 );
         }
 
         private byte[] _DQT;
         public byte[] DQT {
             get { return _DQT; }
             private set {
-                if (value == null)
-                    throw new ArgumentNullException();
+                Contract.Requires<ArgumentNullException>( value != null );
+                Contract.Requires<ArgumentException>( value.Length > 0 );
+
                 _DQT = value;
             }
         }
@@ -128,8 +150,9 @@ namespace JPEG_EntropyCoder {
         public byte[] DHT {
             get { return _DHT; }
             private set {
-                if ( value == null )
-                    throw new ArgumentNullException();
+                Contract.Requires<ArgumentNullException>( value != null );
+                Contract.Requires<ArgumentException>( value.Length > 0 );
+
                 _DHT = value;
             }
         }
@@ -138,8 +161,9 @@ namespace JPEG_EntropyCoder {
         public byte[] SOF {
             get { return _SOF; }
             private set {
-                if ( value == null )
-                    throw new ArgumentNullException();
+                Contract.Requires<ArgumentNullException>( value != null );
+                Contract.Requires<ArgumentException>( value.Length > 0 );
+
                 _SOF = value;
             }
         }
@@ -148,8 +172,9 @@ namespace JPEG_EntropyCoder {
         public byte[] SOS {
             get { return _SOS; }
             private set {
-                if ( value == null )
-                    throw new ArgumentNullException();
+                Contract.Requires<ArgumentNullException>( value != null );
+                Contract.Requires<ArgumentException>( value.Length > 0 );
+
                 _SOS = value;
             }
         }
@@ -160,8 +185,8 @@ namespace JPEG_EntropyCoder {
                 return _compressedImage;
             }
             set {
-                if ( value == null )
-                    throw new ArgumentNullException();
+                Contract.Requires<ArgumentNullException>( value != null );
+                Contract.Requires<ArgumentException>( value.Length > 0 );
 
                 if ( compressedImageIsSet && value.Length != _compressedImage.Length )
                     throw new ArgumentException( "Argument length is not equal to property length and thus cannot be set." );
@@ -184,13 +209,9 @@ namespace JPEG_EntropyCoder {
         public byte[] All {
             get { return _all; }
             set {
-                if ( value == null )
-                    throw new ArgumentNullException();
-
-                if ( allIsSet && value.Length != _all.Length )
-                    throw new ArgumentException( "Argument length is not equal to property length and thus cannot be set." );
-
                 allIsSet = true;
+                Contract.Requires<ArgumentNullException>( value != null );
+                Contract.Requires<ArgumentException>( value.Length > 1 );
 
                 _all = value;
             }
@@ -202,6 +223,7 @@ namespace JPEG_EntropyCoder {
         /// <param name="path">Path to the JPEG file you wish to process.</param>
         public JPEGFileHandler( string path ) {
             LoadFile( path );
+            Contract.Requires<ArgumentException>( bytes.Length > 0 );
         }
 
         /// <summary>
@@ -216,6 +238,8 @@ namespace JPEG_EntropyCoder {
             SOS = GetFieldBytes( SOSMarker );
             CompressedImage = GetCompressedImageBytes();
             FindThumbnail( out thumbnailStartIndex, out thumbnailEndIndex );
+            Contract.Requires<ArgumentNullException>( path != null );
+            Contract.Requires<ArgumentException>( path.Length > 0 );
         }
 
         /// <summary>
@@ -223,6 +247,9 @@ namespace JPEG_EntropyCoder {
         /// </summary>
         /// <param name="path">Path to the JPEG file you wish to save.</param>
         public void SaveFile( string path ) {
+            Contract.Requires<ArgumentNullException>( path != null );
+            Contract.Requires<ArgumentException>( path.Length > 0 );
+
             File.WriteAllBytes( path, All );
         }
     }
