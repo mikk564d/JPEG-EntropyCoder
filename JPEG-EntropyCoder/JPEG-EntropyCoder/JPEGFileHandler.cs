@@ -8,12 +8,17 @@ using JPEG_EntropyCoder.Interfaces;
 
 namespace JPEG_EntropyCoder {
     /// <summary>
-    /// This class holds methods to process a JPEG file. The class is able to load and save a JPEG file aswell as gettting markers' data, compressed image data and all data from it.
+    /// This class holds properties with data from and methods to process a JPEG file.
+    /// The class is able to save a JPEG file aswell as gettting markers' data and all data.
+    /// Also the class is able to get and set compressed image data in the JPEG file.
     /// </summary>
     public class JPEGFileHandler : IJPEGFileHandler {
+        /* Symbolic constants */
         private const byte MARKER_LENGTH = 2;
         private const byte LENGTH_OF_FIELD_LENGTH = 2;
         private const byte MARKER_PREFIX = 0xFF;
+        /* Array with all markers which makes it easy to iterate through all markers. */
+        /* Dictionary with all marker indexes. Markers can occur multiple times hence the value is a list. */
 
         private readonly byte[] SOIMarker = { MARKER_PREFIX, 0xD8 };
         private readonly byte[] DQTMarker = { MARKER_PREFIX, 0xDB };
@@ -38,6 +43,11 @@ namespace JPEG_EntropyCoder {
                 index++;
                 nextTwoBytes[ 0 ] = _all[ index ];
                 nextTwoBytes[ 1 ] = _all[ index + 1 ];
+        /// <summary>
+        /// Fills the markerIndexes dictionary with all indexes for all found markers.
+        /// </summary>
+        /// <param name="dictionary">Dictionary to be filled with marker indexes.</param>
+        /// <param name="bytes">Array of bytes that will be searched for markers.</param>
             Contract.Requires<ArgumentNullException>( dictionary != null );
             Contract.Requires<ArgumentNullException>( bytes != null );
             Contract.Requires<ArgumentException>( bytes.Length > 1 );
@@ -59,8 +69,11 @@ namespace JPEG_EntropyCoder {
             FindMarkerIndex( marker, out lengthOfFieldIndex, startIndex );
             lengthOfFieldIndex += MARKER_LENGTH;
             byte[] lengthOfField = { _all[ lengthOfFieldIndex + 1 ], _all[ lengthOfFieldIndex ], 0, 0 }; // Little endian
+            /* Empty the dictionary before finding all indexes.
+             * This is done because indexes might have changed after setting compressedImage. */
 
             return BitConverter.ToUInt32( lengthOfField, 0 ) - LENGTH_OF_FIELD_LENGTH;
+            /* Iterate through bytes. If a byte is the marker prefix, check if next byte is either of the markers. */
         }
 
         private byte[] GetFieldBytes( byte[] marker ) {
@@ -78,12 +91,20 @@ namespace JPEG_EntropyCoder {
                 lengthOfField = CalculateLengthOfField( marker, markerIndex );
                 fieldBytesIndex = markerIndex + MARKER_LENGTH + LENGTH_OF_FIELD_LENGTH;
                 fields = fields.Concat( _all.Skip( Convert.ToInt32( fieldBytesIndex ) ).Take( Convert.ToInt32( lengthOfField ) ) ).ToArray();
+        /// <summary>
+        /// Returns indexes of the thumbnail's SOI and EOI markers if the array of bytes contains a thumbnail.
+        /// Otherwise unreachable values are returned.
+        /// </summary>
+        /// <param name="dictionary">Dictionary with marker indexes.</param>
+        /// <param name="bytes">Array of bytes the markers were found in.</param>
+        /// <returns>Array with start and end index of the thumbnail. First value is the start index. Second value is the end index.</returns>
             Contract.Requires<ArgumentNullException>( dictionary != null );
             Contract.Requires<ArgumentException>( dictionary[ SOI_MARKER ].Count > 0 );
             }
 
             return fields;
         }
+            /* Initialize to unreachable values so evaluation in GetFieldBytes always evaluates to true when there is no thumbnail. */
 
         private uint FindCompressedImageIndex( uint startIndex = 0 ) {
             /* Caching of compressedImageIndex */
@@ -95,6 +116,14 @@ namespace JPEG_EntropyCoder {
             uint lengthOfField = CalculateLengthOfField( SOSMarker, SOSMarkerIndex );
 
             compressedImageIndex = SOSMarkerIndex + MARKER_LENGTH + LENGTH_OF_FIELD_LENGTH + lengthOfField;
+        /// <summary>
+        /// Calculates and returns the length of the field in relation to the given marker and index of the specific marker in the given dictionary.
+        /// </summary>
+        /// <param name="dictionary">Dictionary with marker indexes.</param>
+        /// <param name="marker">Marker to calculate length of field for.</param>
+        /// <param name="dictionaryMarkerIndex">Index of the specific marker in the dictionary.</param>
+        /// <param name="bytes">Array of bytes the markers were found in.</param>
+        /// <returns>Length of the field of the given specific marker.</returns>
             Contract.Requires<ArgumentNullException>( dictionary != null );
             Contract.Requires<ArgumentException>( dictionary[ marker ].Count > 0 );
             Contract.Requires<ArgumentNullException>( bytes != null );
@@ -107,10 +136,21 @@ namespace JPEG_EntropyCoder {
 
         private byte[] GetCompressedImageBytes() {
             uint compressedImageBytesIndex = FindCompressedImageIndex();
+            /* Array of bytes is neccesary in order to convert to uint32. */
 
             if ( fileContainsThumbnail && compressedImageBytesIndex >= thumbnailStartIndex &&
                  compressedImageBytesIndex <= thumbnailEndIndex )
                 compressedImageBytesIndex = FindCompressedImageIndex( thumbnailEndIndex + MARKER_LENGTH );
+        /// <summary>
+        /// Gets the bytes from the given bytes for the given marker with index from the given dictionary.
+        /// If the marker occurs multiple times the field bytes are concatenated.
+        /// </summary>
+        /// <param name="dictionary">Dictionary with marker indexes.</param>
+        /// <param name="marker">Marker to get field bytes for.</param>
+        /// <param name="thumbnailStartIndex">Start index of the thumbnail.</param>
+        /// <param name="thumbnailEndIndex">End index of the thumbnail.</param>
+        /// <param name="bytes">Array of bytes the markers were found in.</param>
+        /// <returns>Array of bytes containing the bytes for the given marker.</returns>
             Contract.Requires<ArgumentNullException>( dictionary != null );
             Contract.Requires<ArgumentException>( dictionary[ marker ].Count > 0 );
             Contract.Requires<ArgumentNullException>( bytes != null );
@@ -129,6 +169,12 @@ namespace JPEG_EntropyCoder {
 
             fileContainsThumbnail = FindMarkerIndex( SOIMarker, out startIndex, firstSOIIndex + MARKER_LENGTH, false );
             FindMarkerIndex( EOIMarker, out endIndex );
+        /// <summary>
+        /// Gets compressed image bytes from the given bytes.
+        /// </summary>
+        /// <param name="dictionary">Dictionary with marker indexes.</param>
+        /// <param name="bytes">Array of bytes the markers were found in.</param>
+        /// <returns>Array of bytes containing the compressed image bytes.</returns>
             Contract.Requires<ArgumentException>( dictionary[ SOS_MARKER ].Count > 0 );
             Contract.Requires<ArgumentException>( dictionary[ EOI_MARKER ].Count > 0 );
             Contract.Requires<ArgumentNullException>( bytes != null );
@@ -136,6 +182,9 @@ namespace JPEG_EntropyCoder {
         }
 
         private byte[] _DQT;
+        /// <summary>
+        /// Contains DQT bytes from the JPEG file.
+        /// </summary>
         public byte[] DQT {
             get { return _DQT; }
             private set {
@@ -147,6 +196,9 @@ namespace JPEG_EntropyCoder {
         }
 
         private byte[] _DHT;
+        /// <summary>
+        /// Contains DHT bytes from the JPEG file.
+        /// </summary>
         public byte[] DHT {
             get { return _DHT; }
             private set {
@@ -158,6 +210,9 @@ namespace JPEG_EntropyCoder {
         }
 
         private byte[] _SOF;
+        /// <summary>
+        /// Contains SOF bytes from the JPEG file.
+        /// </summary>
         public byte[] SOF {
             get { return _SOF; }
             private set {
@@ -169,6 +224,9 @@ namespace JPEG_EntropyCoder {
         }
 
         private byte[] _SOS;
+        /// <summary>
+        /// Contains SOS bytes from the JPEG file.
+        /// </summary>
         public byte[] SOS {
             get { return _SOS; }
             private set {
@@ -180,6 +238,9 @@ namespace JPEG_EntropyCoder {
         }
 
         private byte[] _compressedImage;
+        /// <summary>
+        /// Contains compressed image bytes from the JPEG file.
+        /// </summary>
         public byte[] CompressedImage {
             get {
                 return _compressedImage;
@@ -206,6 +267,9 @@ namespace JPEG_EntropyCoder {
         }
 
         private byte[] _all;
+        /// <summary>
+        /// Contains all bytes from the JPEG file.
+        /// </summary>
         public byte[] All {
             get { return _all; }
             set {
@@ -218,16 +282,17 @@ namespace JPEG_EntropyCoder {
         }
 
         /// <summary>
-        /// Loads a JPEG file into the instance.
+        /// Loads bytes from a JPEG file into the instance.
         /// </summary>
-        /// <param name="path">Path to the JPEG file you wish to process.</param>
         public JPEGFileHandler( string path ) {
             LoadFile( path );
+        /// <param name="bytes">Bytes from the JPEG file you wish to process.</param>
             Contract.Requires<ArgumentException>( bytes.Length > 0 );
+            /* Image contains either SOF0 or SOF2 - never both. */
         }
 
         /// <summary>
-        /// Loads a JPEG file into the instance and sets all properties.
+        /// Loads a JPEG file into the instance.
         /// </summary>
         /// <param name="path">Path to the JPEG file you wish to process.</param>
         public void LoadFile( string path ) {
