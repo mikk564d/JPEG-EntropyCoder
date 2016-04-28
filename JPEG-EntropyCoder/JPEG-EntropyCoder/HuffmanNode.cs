@@ -1,10 +1,8 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Utilities;
 
 namespace JPEG_EntropyCoder {
     class HuffmanNode {
@@ -79,7 +77,7 @@ namespace JPEG_EntropyCoder {
         public byte SearchFor(BitArray binAddr) {
             Contract.Requires<ArgumentNullException>(binAddr != null);
             if (Leaf) {
-                if (Utility.CompareBitArray(Address, binAddr)) {
+                if (BitArrayUtilities.CompareBitArray(Address, binAddr)) {
                     return Value;
                 } else {
                     return 0xFF;

@@ -136,7 +136,9 @@ namespace JPEG_EntropyCoder {
             byte[] fieldBytes = {};
 
             for ( int i = 0; i < markerIndexesList.Count; i++ ) {
-                if ( markerIndexesList[ i ] < thumbnailStartIndex || markerIndexesList[ i ] > thumbnailEndIndex ) {
+                if ( markerIndexesList[ i ] > dictionary[ SOI_MARKER ][ 0 ]
+                     && markerIndexesList[ i ] < dictionary[ EOI_MARKER ][ dictionary[ EOI_MARKER ].Count - 1 ]
+                     && ( markerIndexesList[ i ] < thumbnailStartIndex || markerIndexesList[ i ] > thumbnailEndIndex ) ) {
                     uint lengthOfField = GetFieldLength( dictionary, marker, i, bytes );
                     fieldBytes = fieldBytes.Concat(
                         bytes.Skip( Convert.ToInt32( markerIndexesList[ i ] + MARKER_LENGTH + LENGTH_OF_FIELD_LENGTH ) )
@@ -165,7 +167,7 @@ namespace JPEG_EntropyCoder {
             uint lengthOfField = GetFieldLength( dictionary, SOS_MARKER, dictionary[ SOS_MARKER ].Count - 1, bytes );
             uint compressedImageIndex = SOSIndex + MARKER_LENGTH + LENGTH_OF_FIELD_LENGTH + lengthOfField;
             List<uint> EOIIndexesList = dictionary[ EOI_MARKER ];
-            uint EOIIndex = dictionary[ EOI_MARKER ][ EOIIndexesList.Count - 1 ]; // EOI marker can occur multiple times. Always take the last.
+            uint EOIIndex = EOIIndexesList.First( markerIndex => markerIndex > SOSIndex ); // Garbage bytes can contain markers. Find the first EOI marker after SOS marker.
 
             return bytes.Skip( Convert.ToInt32( compressedImageIndex ) ).Take( Convert.ToInt32( EOIIndex - compressedImageIndex ) ).ToArray();
         }
@@ -242,7 +244,7 @@ namespace JPEG_EntropyCoder {
                 uint SOSIndex = SOSIndexesList[ SOSIndexesList.Count - 1 ];
 
                 List<uint> EOIIndexesList = markerIndexes[ EOI_MARKER ];
-                uint EOIIndex = EOIIndexesList[ EOIIndexesList.Count - 1 ];
+                uint EOIIndex = EOIIndexesList.First( markerIndex => markerIndex > SOSIndex ); // Garbage bytes can contain markers. Find the first EOI marker after SOS marker.
 
                 uint lengthOfField = GetFieldLength( markerIndexes, SOS_MARKER, SOSIndexesList.Count - 1, all );
 
