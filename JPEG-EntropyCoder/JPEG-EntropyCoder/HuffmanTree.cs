@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace JPEG_EntropyCoder {
     public class HuffmanTree : IHuffmanTree {

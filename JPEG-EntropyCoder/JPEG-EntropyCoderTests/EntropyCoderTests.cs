@@ -4,27 +4,22 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using JPEG_EntropyCoder;
+using JPEG_EntropyCoder.Interfaces;
 using NUnit.Framework;
 
 namespace JPEG_EntropyCoderTests {
+    [TestFixture]
     class EntropyCoderTests {
 
         [SetUp]
         public void Init() {
-            EntropyCoder coder = new EntropyCoder(@"C:\Users\Mikke\Desktop\HammingTest\rainbow-1024p-q60-optimized.jpg");
             
-
         }
 
         [Test]
-        public void BuildHuffmanTrees_SimpleValues_TreeCreated() {
-            
-
-        }
-
-        [Test]
-        public void GetByteFromHuffmantree_SimpleValues_ByteFound() {
+        public void EntropyCoderConstructor_SimpleValues_BuildCorrect() {
             
         }
+
     }
 }

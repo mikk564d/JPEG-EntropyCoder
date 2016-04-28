@@ -1,9 +1,7 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Utilities;
 
 namespace JPEG_EntropyCoder {
     class HuffmanNode {
@@ -70,7 +68,7 @@ namespace JPEG_EntropyCoder {
         /// <returns>If a matching leaf is found it's value is returned. If no leaf is found, 0XFF is returned.</returns>
         public byte SearchFor(BitArray binAddr) { 
             if (Leaf) {
-                if (Utility.CompareBitArray(Address, binAddr)) {
+                if (BitArrayUtilities.CompareBitArray(Address, binAddr)) {
                     return Value;
                 } else {
                     return 0xFF;

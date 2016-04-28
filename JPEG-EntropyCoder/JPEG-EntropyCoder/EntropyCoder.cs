@@ -1,15 +1,12 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using JPEG_EntropyCoder.Components;
 using JPEG_EntropyCoder.Exceptions;
 using JPEG_EntropyCoder.Interfaces;
 
 namespace JPEG_EntropyCoder {
     public class EntropyCoder : IEntropyCoder {
-        public EntropyCoder(List<HuffmanTree> huffmanTrees, BitArray binaryData) {
+        public EntropyCoder(List<IHuffmanTree> huffmanTrees, BitArray binaryData) {
             HuffmanTrees = huffmanTrees;
             EntropyComponents = new List<EntropyComponent>();
             BinaryData = binaryData;
@@ -17,7 +14,7 @@ namespace JPEG_EntropyCoder {
         }
 
         public List<EntropyComponent> EntropyComponents { get; set; }
-        private List<HuffmanTree> HuffmanTrees { get; }
+        private List<IHuffmanTree> HuffmanTrees { get; }
         private BitArray BinaryData { get; }
 
 
