@@ -2,7 +2,7 @@
 using System.Collections;
 
 namespace JPEG_EntropyCoder.Components {
-    abstract class EntropyValueComponent : EntropyComponent{
+    public abstract class EntropyValueComponent : EntropyComponent{
         protected EntropyValueComponent(BitArray huffmanTreePath, byte huffmanLeafHexValue, BitArray amplitude)
             : base(huffmanTreePath, huffmanLeafHexValue) {
             Amplitude = amplitude;

@@ -55,6 +55,7 @@
     <Compile Include="HuffmanTreeType.cs" />
     <Compile Include="Interfaces\IEntropyCoder.cs" />
     <Compile Include="Interfaces\IHuffmanTree.cs" />
+    <Compile Include="Interfaces\IJPEGEntropyCoder.cs" />
     <Compile Include="Interfaces\IJPEGFileHandler.cs" />
     <Compile Include="JPEGEntropyCoder.cs" />
     <Compile Include="JPEGFileHandler.cs" />
