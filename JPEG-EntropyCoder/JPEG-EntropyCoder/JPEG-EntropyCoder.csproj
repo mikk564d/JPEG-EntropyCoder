@@ -47,7 +47,6 @@
     <Compile Include="Components\EntropyComponent.cs" />
     <Compile Include="Components\EOBComponent.cs" />
     <Compile Include="Exceptions\BinaryPathNotFoundInHuffmanTreeException.cs" />
-    <Compile Include="Exceptions\MarkerNotFoundException.cs" />
     <Compile Include="HuffmanNode.cs" />
     <Compile Include="HuffmanTree.cs" />
     <Compile Include="HuffmanTreeType.cs" />
