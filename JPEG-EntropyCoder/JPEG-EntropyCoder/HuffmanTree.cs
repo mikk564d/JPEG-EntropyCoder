@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.Linq;
 
 namespace JPEG_EntropyCoder {
@@ -18,6 +19,8 @@ namespace JPEG_EntropyCoder {
         /// </summary>
         /// <param name="DHT">An array representation of a DHT as it appears in a JPEG file.</param>
         public HuffmanTree(byte[] DHT) {
+            Contract.Requires<ArgumentNullException>(DHT != null);
+            Contract.Requires<ArgumentException>(DHT.Length > 0);
             this.DHT = DHT;
             Root = new HuffmanNode(new BitArray(0), DHT);
         }
@@ -27,6 +30,8 @@ namespace JPEG_EntropyCoder {
         /// <param name="treePath">Only the first 16 bits will be used for leaf address lookup.</param>
         /// <returns></returns>
         public byte Find(BitArray treePath) {
+            Contract.Requires<ArgumentNullException>(treePath != null);
+            
             return Root.SearchFor(treePath);
         }
 

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -25,6 +26,7 @@ namespace JPEG_EntropyCoder {
         /// <param name="binaddr">Should contain the expected address of this node. Should be empty if DHT is not null.</param>
         /// <param name="DHT">An array representation of a DHT as it appears in a JPEG file.</param>
         public HuffmanNode(BitArray binaddr, byte[] DHT = null) {
+            Contract.Requires(DHT == null || (DHT != null && (binaddr == null || binaddr.Length == 0)));
 
             if (DHT != null) {
                 this.PopulateLists(DHT);
@@ -74,7 +76,8 @@ namespace JPEG_EntropyCoder {
         /// </summary>
         /// <param name="binAddr">The address to search for. Can be incomplete.</param>
         /// <returns>If a matching leaf is found it's value is returned. If no leaf is found, 0XFF is returned.</returns>
-        public byte SearchFor(BitArray binAddr) { 
+        public byte SearchFor(BitArray binAddr) {
+            Contract.Requires<ArgumentNullException>(binAddr != null);
             if (Leaf) {
                 if (Utility.CompareBitArray(Address, binAddr)) {
                     return Value;
@@ -102,7 +105,7 @@ namespace JPEG_EntropyCoder {
         /// </summary>
         /// <param name="result">Must be passed as reference. No order in result is guaranteed.</param>
         public void PrintAddresses(ref List<string> result) {
-
+            Contract.Requires<ArgumentNullException>(result != null);
             if (Leaf) {
                 string addressStr = "";
                 foreach (bool b in Address) {
