@@ -1,9 +1,7 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Utilities;
 
 namespace JPEG_EntropyCoder {
     class HuffmanNode {
@@ -18,6 +16,12 @@ namespace JPEG_EntropyCoder {
         private HuffmanNode LeftNode { get; set; }
         private HuffmanNode RightNode { get; set; }
 
+
+        /// <summary>
+        /// Builds the static stack if necesarry and start the recursive construction of the tree.
+        /// </summary>
+        /// <param name="binaddr">Should contain the expected address of this node. Should be empty if DHT is not null.</param>
+        /// <param name="DHT">An array representation of a DHT as it appears in a JPEG file.</param>
         public HuffmanNode(BitArray binaddr, byte[] DHT = null) {
 
             if (DHT != null) {
@@ -70,7 +74,7 @@ namespace JPEG_EntropyCoder {
         /// <returns>If a matching leaf is found it's value is returned. If no leaf is found, 0XFF is returned.</returns>
         public byte SearchFor(BitArray binAddr) { 
             if (Leaf) {
-                if (Utility.CompareBitArray(Address, binAddr)) {
+                if (BitArrayUtilities.CompareBitArray(Address, binAddr)) {
                     return Value;
                 } else {
                     return 0xFF;

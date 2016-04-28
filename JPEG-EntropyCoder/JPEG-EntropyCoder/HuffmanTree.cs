@@ -1,14 +1,20 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace JPEG_EntropyCoder {
     public class HuffmanTree : IHuffmanTree {
 
+        /// <summary>
+        /// The DHT used in construction of the contained tree.
+        /// </summary>
         public byte[] DHT { get; }
         private HuffmanNode Root { get; }
 
+        /// <summary>
+        /// Manages the construction of a Huffmantree.
+        /// The class performs no check to ensure the resulting tree is valid.
+        /// </summary>
+        /// <param name="DHT">An array representation of a DHT as it appears in a JPEG file.</param>
         public HuffmanTree(byte[] DHT) {
             this.DHT = DHT;
             Root = new HuffmanNode(new BitArray(0), DHT);
@@ -22,6 +28,10 @@ namespace JPEG_EntropyCoder {
             return Root.SearchFor(treePath);
         }
 
+        /// <summary>
+        /// Build a print friendly version of the leaves in the tree.
+        /// </summary>
+        /// <returns>A list of strings that are concatenations of the address and value of each leaf in the tree.</returns>
         public List<string> PrintTree() {
             List<string> result = new List<string> { };
             Root.PrintAddresses(ref result);

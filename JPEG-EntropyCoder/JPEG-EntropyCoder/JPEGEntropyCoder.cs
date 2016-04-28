@@ -1,30 +1,39 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using JPEG_EntropyCoder.Components;
 using JPEG_EntropyCoder.Interfaces;
+using Utilities;
 
 namespace JPEG_EntropyCoder {
     public class JPEGEntropyCoder : IJPEGEntropyCoder {
 
+        /// <summary>
+        /// Loads JPEG image and decodes it.
+        /// </summary>
+        /// <param name="path">Path to JPEG image</param>
         public JPEGEntropyCoder(string path) {
             FileHandler = new JPEGFileHandler(path);
-            List<HuffmanTree> huffmanTrees = BuildHuffmanTrees(FileHandler.DHT);
-            //foreach (HuffmanTree huffmanTree in huffmanTrees) {
-            //    Console.WriteLine("Huffmantree");
-            //    foreach (string s in huffmanTree.PrintTree()) {
-            //        Console.WriteLine(s);
-            //    }
-            //}
+            List<IHuffmanTree> huffmanTrees = BuildHuffmanTrees(FileHandler.DHT);
             Coder = new EntropyCoder(huffmanTrees, ConvertBytesToBitArray(FileHandler.CompressedImage));
         }
+        /// <summary>
+        /// List with EntropyComponent
+        /// </summary>
+        public List<EntropyComponent> EntropyComponents {
+            get { return Coder.EntropyComponents; }
+            set { Coder.EntropyComponents = value; }
+        }
 
-        private EntropyCoder Coder { get; }
-        private JPEGFileHandler FileHandler { get; }
+        private IEntropyCoder Coder { get; }
+        private IJPEGFileHandler FileHandler { get; }
 
-        private List<HuffmanTree> BuildHuffmanTrees(byte[] DHTFromFile) {
+        /// <summary>
+        /// Builds HuffmanTrees with <paramref name="DHTFromFile"/>
+        /// </summary>
+        /// <param name="DHTFromFile">DHT from IJPEGFileHandler</param>
+        /// <returns>Returns a list with HuffmanTree</returns>
+        private List<IHuffmanTree> BuildHuffmanTrees(byte[] DHTFromFile) {
             List<byte[]> DHTs = new List<byte[]>() { new byte[0], new byte[0], new byte[0], new byte[0] };
             int index = 0;
             for (int i = 0; i < 4; i++) {
@@ -48,7 +57,7 @@ namespace JPEG_EntropyCoder {
                 DHTs[(int)huffmanTree] = dht.ToArray();
             }
 
-            List<HuffmanTree> huffmanTrees = new List<HuffmanTree>();
+            List<IHuffmanTree> huffmanTrees = new List<IHuffmanTree>();
             foreach (byte[] table in DHTs) {
                 huffmanTrees.Add(new HuffmanTree(table));
             }
@@ -56,6 +65,11 @@ namespace JPEG_EntropyCoder {
             return huffmanTrees;
         }
 
+        /// <summary>
+        /// Convert byte[] to BitArray and reverse the BitArray.
+        /// </summary>
+        /// <param name="bytesFromFile"></param>
+        /// <returns>Returns BitArray</returns>
         private BitArray ConvertBytesToBitArray(byte[] bytesFromFile) {
             List<byte> bytes = new List<byte>();
 
@@ -67,22 +81,18 @@ namespace JPEG_EntropyCoder {
             }
 
             BitArray binData = new BitArray(bytes.ToArray());
-            binData = Utility.ReverseBitArray(binData);
-
-            for (int i = 0, j = binData.Count - 1; i < binData.Count / 2; i++, j--) {
-                bool temp = binData[i];
-                binData[i] = binData[j];
-                binData[j] = temp;
-            }
+            binData = BitArrayUtilities.ChangeEndianOnBitArray(binData);
+            binData = BitArrayUtilities.ReverseBitArray(binData);
 
             return binData;
         }
 
-        public void Encode() {
-            FileHandler.CompressedImage = Coder.EncodeToByteArray();
-        }
-
+        /// <summary>
+        /// Save the JPEG image to <paramref name="path"/>
+        /// </summary>
+        /// <param name="path"></param>
         public void Save(string path) {
+            FileHandler.CompressedImage = Coder.EncodeToByteArray();
             FileHandler.SaveFile(path);
         }
     }
