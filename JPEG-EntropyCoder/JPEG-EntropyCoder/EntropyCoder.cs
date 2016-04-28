@@ -67,7 +67,7 @@ namespace JPEG_EntropyCoder {
 
 
         private void DecodeBinaryData() {
-            int luminensSubsamling = 4;
+            int luminensSubsamling = 1;
             int chrominensSubsampling = 2;
 
             while (BinaryData.Count >= 8) {
