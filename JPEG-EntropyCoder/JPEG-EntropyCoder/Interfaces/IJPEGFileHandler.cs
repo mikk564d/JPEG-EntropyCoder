@@ -6,8 +6,7 @@ namespace JPEG_EntropyCoder.Interfaces {
         byte[] SOF { get; }
         byte[] SOS { get; }
         byte[] CompressedImage { get; set; }
-        byte[] All { get; set; }
-        void LoadFile(string path);
-        void SaveFile(string path);
+        byte[] All { get; }
+        void SaveFile( string path );
     }
 }

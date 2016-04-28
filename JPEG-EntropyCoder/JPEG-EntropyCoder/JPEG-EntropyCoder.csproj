@@ -50,20 +50,18 @@
     <Compile Include="Components\EntropyComponent.cs" />
     <Compile Include="Components\EOBComponent.cs" />
     <Compile Include="Exceptions\BinaryPathNotFoundInHuffmanTreeException.cs" />
-    <Compile Include="Exceptions\MarkerNotFoundException.cs" />
     <Compile Include="HuffmanNode.cs" />
     <Compile Include="HuffmanTree.cs" />
     <Compile Include="HuffmanTreeType.cs" />
     <Compile Include="Interfaces\IEntropyCoder.cs" />
     <Compile Include="Interfaces\IHuffmanTree.cs" />
-    <Compile Include="Interfaces\IJPEGEntropyCoder.cs" />
     <Compile Include="Interfaces\IJPEGFileHandler.cs" />
     <Compile Include="JPEGEntropyCoder.cs" />
     <Compile Include="JPEGFileHandler.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it.
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
   </Target>

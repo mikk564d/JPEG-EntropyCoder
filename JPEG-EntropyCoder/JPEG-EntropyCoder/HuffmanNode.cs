@@ -16,6 +16,12 @@ namespace JPEG_EntropyCoder {
         private HuffmanNode LeftNode { get; set; }
         private HuffmanNode RightNode { get; set; }
 
+
+        /// <summary>
+        /// Builds the static stack if necesarry and start the recursive construction of the tree.
+        /// </summary>
+        /// <param name="binaddr">Should contain the expected address of this node. Should be empty if DHT is not null.</param>
+        /// <param name="DHT">An array representation of a DHT as it appears in a JPEG file.</param>
         public HuffmanNode(BitArray binaddr, byte[] DHT = null) {
 
             if (DHT != null) {
