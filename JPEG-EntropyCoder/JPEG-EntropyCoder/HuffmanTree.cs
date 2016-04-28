@@ -1,9 +1,14 @@
-﻿using System;
+﻿using JPEG_EntropyCoder.Interfaces;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 
+
 namespace JPEG_EntropyCoder {
+    /// <summary>
+    /// Wrapper class for building Huffman trees
+    /// </summary>
     public class HuffmanTree : IHuffmanTree {
 
         /// <summary>
