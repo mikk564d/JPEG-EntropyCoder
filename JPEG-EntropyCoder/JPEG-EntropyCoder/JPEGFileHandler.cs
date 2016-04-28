@@ -136,7 +136,9 @@ namespace JPEG_EntropyCoder {
             byte[] fieldBytes = {};
 
             for ( int i = 0; i < markerIndexesList.Count; i++ ) {
-                if ( markerIndexesList[ i ] < thumbnailStartIndex || markerIndexesList[ i ] > thumbnailEndIndex ) {
+                if ( markerIndexesList[ i ] > dictionary[ SOI_MARKER ][ 0 ]
+                     && markerIndexesList[ i ] < dictionary[ EOI_MARKER ][ dictionary[ EOI_MARKER ].Count - 1 ]
+                     && ( markerIndexesList[ i ] < thumbnailStartIndex || markerIndexesList[ i ] > thumbnailEndIndex ) ) {
                     uint lengthOfField = GetFieldLength( dictionary, marker, i, bytes );
                     fieldBytes = fieldBytes.Concat(
                         bytes.Skip( Convert.ToInt32( markerIndexesList[ i ] + MARKER_LENGTH + LENGTH_OF_FIELD_LENGTH ) )
