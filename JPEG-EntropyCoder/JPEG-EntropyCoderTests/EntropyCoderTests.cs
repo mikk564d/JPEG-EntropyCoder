@@ -14,22 +14,22 @@ namespace JPEG_EntropyCoderTests {
     [TestFixture]
     class EntropyCoderTests {
 
+        private IEntropyCoder Coder { get; set; }    
+
         [SetUp]
         public void Init() {
-            
-        }
-
-        [Test]
-        public void EntropyCoderConstructor_SimpleValues_BuildCorrect() {
             List<IHuffmanTree> huffmanTrees = new List<IHuffmanTree>();
             huffmanTrees.Add(new HuffmanTree(new byte[] { 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x08, 0x09 }));
             huffmanTrees.Add(new HuffmanTree(new byte[] { 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }));
             huffmanTrees.Add(new HuffmanTree(new byte[] { 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }));
             huffmanTrees.Add(new HuffmanTree(new byte[] { 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }));
-            BitArray compressedImageData = new BitArray(new byte[] {0x2A, 0x02, 0xAA, 0x03});
+            BitArray compressedImageData = new BitArray(new byte[] { 0x2A, 0x02, 0xAA, 0x03 });
             compressedImageData = BitArrayUtilities.ReverseBitArray(BitArrayUtilities.ChangeEndianOnBitArray(compressedImageData));
-            EntropyCoder coder = new EntropyCoder(huffmanTrees, compressedImageData);
+            Coder = new EntropyCoder(huffmanTrees, compressedImageData);
+        }
 
+        [Test]
+        public void EntropyCoderConstructor_SimpleValuesSmallPicture_BuildCorrect() {
             List<EntropyComponent> expectedComponents = new List<EntropyComponent>();
             expectedComponents.Add(new DCComponent(new BitArray(new bool[] { false }), 0x08, new BitArray(new bool[] { false, true, false, true, false, true, false, false })));
             expectedComponents.Add(new EOBComponent(new BitArray(new []{false}), 0x00));
@@ -45,7 +45,24 @@ namespace JPEG_EntropyCoderTests {
             expectedComponents.Add(new DCComponent(new BitArray(new[] { false }), 0x00, new BitArray(new[] { false })));
             expectedComponents.Add(new EOBComponent(new BitArray(new[] { false }), 0x00));
 
-            Assert.IsTrue(coder.EntropyComponents.SequenceEqual(expectedComponents));
+            Assert.IsTrue(Coder.EntropyComponents.SequenceEqual(expectedComponents));
+        }
+
+        [Test]
+        public void EncodeToByteArray_SimpleValues_Calculated() {
+            byte[] expectedBytes = new byte[] { 0x2A, 0x02, 0xAA, 0x03 };
+            byte[] actualBytes = Coder.EncodeToByteArray();
+
+            Assert.AreEqual(expectedBytes, actualBytes);
+        }
+
+        [Test]
+        public void EncodeToBitArray_SimpleValues_Calculated() {
+            BitArray expectedBitArray = new BitArray(new byte[] { 0x2A, 0x02, 0xAA, 0x03 });
+            expectedBitArray = BitArrayUtilities.ChangeEndianOnBitArray(expectedBitArray);
+            BitArray actualBitArray = Coder.EncodeToBitArray();
+
+            Assert.IsTrue(BitArrayUtilities.CompareBitArray(expectedBitArray, actualBitArray));
         }
     }
 }

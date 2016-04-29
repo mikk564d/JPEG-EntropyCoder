@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using JPEG_EntropyCoder.Components;
 using JPEG_EntropyCoder.Exceptions;
 using JPEG_EntropyCoder.Interfaces;
+using Utilities;
 
 namespace JPEG_EntropyCoder {
     public class EntropyCoder : IEntropyCoder {
@@ -19,7 +20,7 @@ namespace JPEG_EntropyCoder {
 
 
         public BitArray EncodeToBitArray() {
-            return new BitArray(EncodeToByteArray());
+            return BitArrayUtilities.ReverseBitArray(new BitArray(EncodeToByteArray()));
         }
 
         public byte[] EncodeToByteArray() {
@@ -48,9 +49,12 @@ namespace JPEG_EntropyCoder {
 
             while (bits.Count % 8 != 0) {
                 bits.Length++;
+                bits[currentIndex++] = true;
             }
 
             byte[] bytesBeforeBitstuff = new byte[bits.Count / 8];
+
+            bits = BitArrayUtilities.ChangeEndianOnBitArray(bits);
 
             bits.CopyTo(bytesBeforeBitstuff, 0);
 
@@ -71,8 +75,8 @@ namespace JPEG_EntropyCoder {
             int chrominensSubsampling = 2;
 
             while (BinaryData.Count >= 8) {
-                DecodeBlock(luminensSubsamling, HuffmanTable.Luminens);
-                DecodeBlock(chrominensSubsampling, HuffmanTable.Chrominens);
+                DecodeBlock(luminensSubsamling, HuffmanTable.Luminance);
+                DecodeBlock(chrominensSubsampling, HuffmanTable.Chrominance);
             }
         }
 
@@ -80,7 +84,7 @@ namespace JPEG_EntropyCoder {
             HuffmanTable DC;
             HuffmanTable AC;
 
-            if (typeTable == HuffmanTable.Luminens) {
+            if (typeTable == HuffmanTable.Luminance) {
                 DC = HuffmanTable.LumDC;
                 AC = HuffmanTable.LumAC;
             } else {
