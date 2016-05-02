@@ -6,6 +6,9 @@ using JPEG_EntropyCoder.Interfaces;
 using Utilities;
 
 namespace JPEG_EntropyCoder {
+    /// <summary>
+    /// Works as the primary class for this library.
+    /// </summary>
     public class JPEGEntropyCoder : IJPEGEntropyCoder {
 
         /// <summary>

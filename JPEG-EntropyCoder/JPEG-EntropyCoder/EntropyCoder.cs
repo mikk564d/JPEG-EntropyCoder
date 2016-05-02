@@ -1,24 +1,44 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using JPEG_EntropyCoder.Components;
 using JPEG_EntropyCoder.Exceptions;
 using JPEG_EntropyCoder.Interfaces;
 using Utilities;
 
 namespace JPEG_EntropyCoder {
+    /// <summary>
+    /// Uses HuffmanTrees to code the given JPEG binarydata.
+    /// </summary>
     public class EntropyCoder : IEntropyCoder {
-        public EntropyCoder(List<IHuffmanTree> huffmanTrees, BitArray binaryData) {
+        /// <summary>
+        /// Decodes the given JPEG binarydata.
+        /// </summary>
+        /// <param name="huffmanTrees">HuffmanTrees from a JPEG image</param>
+        /// <param name="binaryData">Binaraydata from a JPEG image. The BitArray needs to be encoded with big endian and be in the reverse order.</param>
+        /// <param name="luminensBlocks">Luminans blocks per MCU</param>
+        public EntropyCoder(List<IHuffmanTree> huffmanTrees, BitArray binaryData, int luminensBlocks) {
+            Contract.Requires<ArgumentException>(huffmanTrees.Count == 4);
+            Contract.Requires<ArgumentException>(binaryData != null);
+            Contract.Requires<ArgumentException>(luminensBlocks > 0);
+
             HuffmanTrees = huffmanTrees;
             EntropyComponents = new List<EntropyComponent>();
             BinaryData = binaryData;
-            DecodeBinaryData();
+            DecodeBinaryData(luminensBlocks);
         }
-
+        /// <summary>
+        /// List with EntropyComponets.
+        /// </summary>
         public List<EntropyComponent> EntropyComponents { get; set; }
         private List<IHuffmanTree> HuffmanTrees { get; }
         private BitArray BinaryData { get; }
 
-
+        /// <summary>
+        /// Encodes the list EntropyComponets to a BitArray.
+        /// </summary>
+        /// <returns></returns>
         public BitArray EncodeToBitArray() {
             int currentIndex = 0;
 
@@ -51,6 +71,10 @@ namespace JPEG_EntropyCoder {
             return bits;
         }
 
+        /// <summary>
+        /// Encodes the list EntropyComponets to a byte[].
+        /// </summary>
+        /// <returns></returns>
         public byte[] EncodeToByteArray() {
             BitArray bits = EncodeToBitArray();
             
@@ -71,17 +95,24 @@ namespace JPEG_EntropyCoder {
             return bytes.ToArray();
         }
 
-
-        private void DecodeBinaryData() {
-            int luminensSubsamling = 4;
-            int chrominensSubsampling = 2;
+        /// <summary>
+        /// Entropy decodes <see cref="BinaryData"/>.
+        /// </summary>
+        /// <param name="luminensSubsamling">Amount of luminans blocks per MCU</param>  
+        private void DecodeBinaryData(int luminensSubsamling) {
+            int chrominansSubsampling = 2;
 
             while (BinaryData.Count >= 8) {
                 DecodeBlock(luminensSubsamling, HuffmanTable.Luminance);
-                DecodeBlock(chrominensSubsampling, HuffmanTable.Chrominance);
+                DecodeBlock(chrominansSubsampling, HuffmanTable.Chrominance);
             }
         }
 
+        /// <summary>
+        /// Entropy decodes one block.
+        /// </summary>
+        /// <param name="subsampling">JPEG image supsampling</param>
+        /// <param name="typeTable">Enum that describes the type of block</param>
         private void DecodeBlock(int subsampling, HuffmanTable typeTable) {
             HuffmanTable DC;
             HuffmanTable AC;
@@ -103,6 +134,12 @@ namespace JPEG_EntropyCoder {
             }
         }
 
+        /// <summary>
+        /// Entropy decodes one entropycomponent.
+        /// </summary>
+        /// <param name="table">Enum that describes which huffmanTree to use</param>
+        /// <param name="isDC">Bool to know if its an DC EntropyComponent</param>
+        /// <returns>Returns true if EOBComponent was created.</returns>
         private bool DecodeHuffmanHexValue(HuffmanTable table, bool isDC) {
             byte huffmanLeafByte;
             BitArray amplitude = new BitArray(0);
@@ -139,6 +176,12 @@ namespace JPEG_EntropyCoder {
             return false;
         }
 
+        /// <summary>
+        /// This method searches for a leaf in a huffmantree.
+        /// </summary>
+        /// <param name="currentHuffmanTreePath">The path that found a leaf</param>
+        /// <param name="huffmanLeafByte">The byte in the leaf</param>
+        /// <param name="table">The HuffmanTree to search in</param>
         private void GetByteFromHuffmantree(out BitArray currentHuffmanTreePath, out byte huffmanLeafByte, HuffmanTable table) {
             currentHuffmanTreePath = new BitArray(0);
             huffmanLeafByte = 0xFF;
