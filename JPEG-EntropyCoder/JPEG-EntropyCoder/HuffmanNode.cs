@@ -6,6 +6,9 @@ using System.Linq;
 using Utilities;
 
 namespace JPEG_EntropyCoder {
+    /// <summary>
+    /// Represents nodes in a Huffman tree. Both inner nodes and Leaves are represented by this class.
+    /// </summary>
     class HuffmanNode {
 
         private static LinkedList<LinkedList<byte>> DHTLists; //Contains the values for each level of the tree
