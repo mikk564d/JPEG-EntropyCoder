@@ -31,7 +31,7 @@ namespace JPEG_EntropyCoder {
             BitArray compressedImage = ConvertBytesToBitArray(FileHandler.CompressedImage);
             int luminensBlocks = GetNumberOfLuminanceBlocksPerMCU(FileHandler.SOF);
             Coder = new EntropyCoder(huffmanTrees, compressedImage, luminensBlocks);
-        }       
+        }
 
         /// <summary>
         /// Builds HuffmanTrees with <paramref name="DHTFromFile"/>
@@ -92,6 +92,10 @@ namespace JPEG_EntropyCoder {
             return binData;
         }
 
+        /// Gets the number of luminance blocks per MCU based on SOF bytes.
+        /// </summary>
+        /// <param name="SOF">Bytes with SOF data.</param>
+        /// <returns>Returns either 1 or 4 which corresponds to either 4:4:4 or 4:2:0 subsampling.</returns>
         private int GetNumberOfLuminanceBlocksPerMCU(byte[] SOF) {
             byte luminanceSubsampling = SOF[7]; // Luminance subsampling info in SOF field data.
 
