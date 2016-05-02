@@ -23,7 +23,7 @@ namespace JPEG_EntropyCoderTests {
             huffmanTrees.Add(new HuffmanTree(DHTs[3]));
             BitArray compressedImageData = new BitArray(File.ReadAllBytes(@"C:\Users\Nyggi\Documents\GitHub\JPEG-EntropyCoder\JPEG-EntropyCoder\JPEG-EntropyCoderTests\Pictures\SINGLE_MARKER_NO_THUMBNAIL\CompressedImage"));
             compressedImageData = BitArrayUtilities.ReverseBitArray(BitArrayUtilities.ChangeEndianOnBitArray(compressedImageData));
-            Coder = new EntropyCoder(huffmanTrees, compressedImageData);
+            Coder = new EntropyCoder(huffmanTrees, compressedImageData, 4);
         }
 
         [Test]

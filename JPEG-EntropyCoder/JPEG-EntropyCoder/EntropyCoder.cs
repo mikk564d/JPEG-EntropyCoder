@@ -38,66 +38,6 @@ namespace JPEG_EntropyCoder {
         }
 
         /// <summary>
-        /// Encodes the list EntropyComponets to a BitArray.
-        /// </summary>
-        /// <returns></returns>
-        public BitArray EncodeToBitArray() {
-            int currentIndex = 0;
-
-            BitArray bits = new BitArray(0);
-
-
-            foreach (EntropyComponent entropyComponent in EntropyComponents) {
-                if ((entropyComponent is DCComponent && entropyComponent.HuffmanLeafByte == 0x00) || entropyComponent is EOBComponent) {
-                    foreach (bool b in entropyComponent.HuffmanTreePath) {
-                        bits.Length++;
-                        bits[currentIndex++] = b;
-                    }
-                } else {
-                    foreach (bool b in entropyComponent.HuffmanTreePath) {
-                        bits.Length++;
-                        bits[currentIndex++] = b;
-                    }
-                    foreach (bool b in ((EntropyValueComponent)entropyComponent).Amplitude) {
-                        bits.Length++;
-                        bits[currentIndex++] = b;
-                    }
-                }
-            }
-
-            while (bits.Count % 8 != 0) {
-                bits.Length++;
-                bits[currentIndex++] = true;
-            }
-
-            return bits;
-        }
-
-        /// <summary>
-        /// Encodes the list EntropyComponets to a byte[].
-        /// </summary>
-        /// <returns></returns>
-        public byte[] EncodeToByteArray() {
-            BitArray bits = EncodeToBitArray();
-            
-            byte[] bytesBeforeBitstuff = new byte[bits.Count / 8];
-
-            bits = BitArrayUtilities.ChangeEndianOnBitArray(bits);
-
-            bits.CopyTo(bytesBeforeBitstuff, 0);
-
-            List<byte> bytes = new List<byte>();
-            for (int i = 0; i < bytesBeforeBitstuff.Length; i++) {
-                bytes.Add(bytesBeforeBitstuff[i]);
-                if (bytesBeforeBitstuff[i] == 0xFF) {
-                    bytes.Add(0x00);
-                }
-            }
-
-            return bytes.ToArray();
-        }
-
-        /// <summary>
         /// Entropy decodes <see cref="BinaryData"/>.
         /// </summary>
         /// <param name="luminansSubsamling">Amount of luminans blocks per MCU</param>  
@@ -197,6 +137,64 @@ namespace JPEG_EntropyCoder {
             if (huffmanLeafByte == 0xFF) {
                 throw new BinaryPathNotFoundInHuffmanTreeException($"The path {currentHuffmanTreePath} was not found in {table} HuffmanTree.");
             }
-        }       
+        }
+        /// <summary>
+        /// Encodes the list EntropyComponets to a BitArray.
+        /// </summary>
+        /// <returns></returns>
+        public BitArray EncodeToBitArray() {
+            int currentIndex = 0;
+
+            BitArray bits = new BitArray(0);
+
+            foreach (EntropyComponent entropyComponent in EntropyComponents) {
+                if ((entropyComponent is DCComponent && entropyComponent.HuffmanLeafByte == 0x00) || entropyComponent is EOBComponent) {
+                    foreach (bool b in entropyComponent.HuffmanTreePath) {
+                        bits.Length++;
+                        bits[currentIndex++] = b;
+                    }
+                } else {
+                    foreach (bool b in entropyComponent.HuffmanTreePath) {
+                        bits.Length++;
+                        bits[currentIndex++] = b;
+                    }
+                    foreach (bool b in ((EntropyValueComponent)entropyComponent).Amplitude) {
+                        bits.Length++;
+                        bits[currentIndex++] = b;
+                    }
+                }
+            }
+
+            while (bits.Count % 8 != 0) {
+                bits.Length++;
+                bits[currentIndex++] = true;
+            }
+
+            return bits;
+        }
+
+        /// <summary>
+        /// Encodes the list EntropyComponets to a byte[].
+        /// </summary>
+        /// <returns></returns>
+        public byte[] EncodeToByteArray() {
+            BitArray bits = EncodeToBitArray();
+
+            byte[] bytesBeforeBitstuff = new byte[bits.Count / 8];
+
+            bits = BitArrayUtilities.ChangeEndianOnBitArray(bits);
+
+            bits.CopyTo(bytesBeforeBitstuff, 0);
+
+            List<byte> bytes = new List<byte>();
+            for (int i = 0; i < bytesBeforeBitstuff.Length; i++) {
+                bytes.Add(bytesBeforeBitstuff[i]);
+                if (bytesBeforeBitstuff[i] == 0xFF) {
+                    bytes.Add(0x00);
+                }
+            }
+
+            return bytes.ToArray();
+        }
     }
 }

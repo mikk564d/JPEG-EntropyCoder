@@ -92,6 +92,7 @@ namespace JPEG_EntropyCoder {
             return binData;
         }
 
+        ///<summary>
         /// Gets the number of luminance blocks per MCU based on SOF bytes.
         /// </summary>
         /// <param name="SOF">Bytes with SOF data.</param>

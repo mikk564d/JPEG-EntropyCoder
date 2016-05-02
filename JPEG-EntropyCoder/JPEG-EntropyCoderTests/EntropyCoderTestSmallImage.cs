@@ -30,7 +30,7 @@ namespace JPEG_EntropyCoderTests {
             huffmanTrees.Add(new HuffmanTree(new byte[] { 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }));
             BitArray compressedImageData = new BitArray(new byte[] { 0x2A, 0x02, 0xAA, 0x03 });
             compressedImageData = BitArrayUtilities.ReverseBitArray(BitArrayUtilities.ChangeEndianOnBitArray(compressedImageData));
-            Coder = new EntropyCoder(huffmanTrees, compressedImageData);
+            Coder = new EntropyCoder(huffmanTrees, compressedImageData, 1);
         }
 
         [Test]

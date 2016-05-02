@@ -6,9 +6,9 @@ namespace JPEG_EntropyCoder.Components {
 
         public BitArray Amplitude { get; set; }
 
-        public int LSB {
-            get { return Amplitude[Amplitude.Length] ? 1 : 0; }
-            set { Amplitude[Amplitude.Length] = value == 1; }
+        public bool LSB {
+            get { return Amplitude[Amplitude.Length]; }
+            set { Amplitude[Amplitude.Length] = value ; }
         }
 
         protected EntropyValueComponent(BitArray huffmanTreePath, byte huffmanLeafHexValue, BitArray amplitude)
