@@ -31,6 +31,11 @@ namespace JPEG_EntropyCoder {
         private IEntropyCoder Coder { get; }
         private IJPEGFileHandler FileHandler { get; }
 
+        /// <summary>
+        /// Gets the number of luminance blocks per MCU based on SOF bytes.
+        /// </summary>
+        /// <param name="SOF">Bytes with SOF data.</param>
+        /// <returns>Returns either 1 or 4 which corresponds to either 4:4:4 or 4:2:0 subsampling.</returns>
         private int GetNumberOfLuminanceBlocksPerMCU(byte[] SOF) {
             byte luminanceSubsampling = SOF[7]; // Luminance subsampling info in SOF field data.
 
