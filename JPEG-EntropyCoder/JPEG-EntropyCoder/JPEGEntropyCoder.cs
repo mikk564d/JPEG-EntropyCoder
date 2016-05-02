@@ -15,7 +15,7 @@ namespace JPEG_EntropyCoder {
         public JPEGEntropyCoder(string path) {
             FileHandler = new JPEGFileHandler(path);
             List<IHuffmanTree> huffmanTrees = BuildHuffmanTrees(FileHandler.DHT);
-            Coder = new EntropyCoder(huffmanTrees, ConvertBytesToBitArray(FileHandler.CompressedImage));
+            Coder = new EntropyCoder(huffmanTrees, ConvertBytesToBitArray(FileHandler.CompressedImage), GetNumberOfLuminanceBlocksPerMCU( FileHandler.SOF ) );
         }
         /// <summary>
         /// List with EntropyComponent
@@ -27,6 +27,17 @@ namespace JPEG_EntropyCoder {
 
         private IEntropyCoder Coder { get; }
         private IJPEGFileHandler FileHandler { get; }
+
+        private int GetNumberOfLuminanceBlocksPerMCU(byte[] SOF) {
+            byte luminanceSubsampling = SOF[7]; // Luminance subsampling info in SOF field data.
+
+            /* Either Luminance subsampling is 0x11 or 0x22 */
+            if (luminanceSubsampling == 0x11) {
+                return 1;
+            } else {
+                return 4;
+            }
+        }
 
         /// <summary>
         /// Builds HuffmanTrees with <paramref name="DHTFromFile"/>
