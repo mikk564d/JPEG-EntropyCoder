@@ -5,17 +5,15 @@ using Utilities;
 
 namespace JPEG_EntropyCoder.Components {
      public abstract class EntropyComponent {
+        public BitArray HuffmanTreePath { get; }
+        public byte HuffmanLeafByte { get; }
 
-         protected EntropyComponent(BitArray huffmanTreePath, byte huffmanLeafHexValue) {
+        protected EntropyComponent(BitArray huffmanTreePath, byte huffmanLeafHexValue) {
             HuffmanTreePath = huffmanTreePath;
             HuffmanLeafByte = huffmanLeafHexValue;
         }
 
-        public BitArray HuffmanTreePath { get; }
-
-        public byte HuffmanLeafByte { get; }
-
-         public override bool Equals(object obj) {
+        public override bool Equals(object obj) {
              if (ReferenceEquals(null, obj)) {
                  return false;
              }
@@ -27,6 +25,7 @@ namespace JPEG_EntropyCoder.Components {
              }
              return Equals((EntropyComponent) obj);
          }
+
         protected bool Equals(EntropyComponent other) {
             return BitArrayUtilities.CompareBitArray(HuffmanTreePath, other.HuffmanTreePath) && HuffmanLeafByte == other.HuffmanLeafByte;
         }

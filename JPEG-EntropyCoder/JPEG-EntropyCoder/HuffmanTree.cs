@@ -10,7 +10,6 @@ namespace JPEG_EntropyCoder {
     /// Wrapper class for building Huffman trees
     /// </summary>
     public class HuffmanTree : IHuffmanTree {
-
         /// <summary>
         /// The DHT used in construction of the contained tree.
         /// </summary>
@@ -28,6 +27,7 @@ namespace JPEG_EntropyCoder {
             this.DHT = DHT;
             Root = new HuffmanNode(new BitArray(0), DHT);
         }
+
         /// <summary>
         /// Attempts to find a leaf at the supplied path.
         /// </summary>

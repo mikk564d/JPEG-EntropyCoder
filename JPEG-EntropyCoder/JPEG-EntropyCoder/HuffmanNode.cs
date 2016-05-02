@@ -10,7 +10,6 @@ namespace JPEG_EntropyCoder {
     /// Represents nodes in a Huffman tree. Both inner nodes and Leaves are represented by this class.
     /// </summary>
     class HuffmanNode {
-
         private static LinkedList<LinkedList<byte>> DHTLists; //Contains the values for each level of the tree
 
         private byte Value { get; set; }
@@ -20,7 +19,6 @@ namespace JPEG_EntropyCoder {
 
         private HuffmanNode LeftNode { get; set; }
         private HuffmanNode RightNode { get; set; }
-
 
         /// <summary>
         /// Builds the static stack if necesarry and start the recursive construction of the tree.
@@ -71,6 +69,20 @@ namespace JPEG_EntropyCoder {
                 DHTLists.AddLast(valuesList);
             }
 
+        }
+
+        /// <summary>
+        /// Tries to convert this node into a leaf and assign it a value.
+        /// If successfull the assigned value is also removed from the DHTLists
+        /// To check if the method was successfull, check the Leaf property of the object.
+        /// </summary>
+        private void MakeMeLeaf() {
+            if (Level > 0 && LevelList().Any()) {
+
+                Value = LevelList().First.Value;
+                Leaf = true;
+                LevelList().RemoveFirst();
+            }
         }
 
         /// <summary>
@@ -128,21 +140,7 @@ namespace JPEG_EntropyCoder {
         private LinkedList<byte> LevelList() {
             // returns the list of values for the treelevel of this node.
             return DHTLists.ElementAt(Level - 1);
-        }
-
-        /// <summary>
-        /// Tries to convert this node into a leaf and assign it a value.
-        /// If successfull the assigned value is also removed from the DHTLists
-        /// To check if the method was successfull, check the Leaf property of the object.
-        /// </summary>
-        private void MakeMeLeaf() {
-            if (Level > 0 && LevelList().Any()) {
-
-                Value = LevelList().First.Value;
-                Leaf = true;
-                LevelList().RemoveFirst();
-            }
-        }
+        }       
     }
 }
 

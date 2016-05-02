@@ -13,10 +13,18 @@ namespace JPEG_EntropyCoder {
     /// </summary>
     public class EntropyCoder : IEntropyCoder {
         /// <summary>
+        /// List with EntropyComponets.
+        /// </summary>
+        public List<EntropyComponent> EntropyComponents { get; set; }
+        private List<IHuffmanTree> HuffmanTrees { get; }
+        private BitArray BinaryData { get; }
+
+        /// <summary>
         /// Decodes the given JPEG binarydata.
         /// </summary>
         /// <param name="huffmanTrees">HuffmanTrees from a JPEG image</param>
-        /// <param name="binaryData">Binaraydata from a JPEG image. The BitArray needs to be encoded with big endian and be in the reverse order.</param>
+        /// <param name="binaryData">Binaraydata from a JPEG image. The BitArray needs to be encoded 
+        /// with big endian and be in the reverse order.</param>
         /// <param name="luminensBlocks">Luminans blocks per MCU</param>
         public EntropyCoder(List<IHuffmanTree> huffmanTrees, BitArray binaryData, int luminensBlocks) {
             Contract.Requires<ArgumentException>(huffmanTrees.Count == 4);
@@ -28,12 +36,6 @@ namespace JPEG_EntropyCoder {
             BinaryData = binaryData;
             DecodeBinaryData(luminensBlocks);
         }
-        /// <summary>
-        /// List with EntropyComponets.
-        /// </summary>
-        public List<EntropyComponent> EntropyComponents { get; set; }
-        private List<IHuffmanTree> HuffmanTrees { get; }
-        private BitArray BinaryData { get; }
 
         /// <summary>
         /// Encodes the list EntropyComponets to a BitArray.
@@ -98,12 +100,12 @@ namespace JPEG_EntropyCoder {
         /// <summary>
         /// Entropy decodes <see cref="BinaryData"/>.
         /// </summary>
-        /// <param name="luminensSubsamling">Amount of luminans blocks per MCU</param>  
-        private void DecodeBinaryData(int luminensSubsamling) {
+        /// <param name="luminansSubsamling">Amount of luminans blocks per MCU</param>  
+        private void DecodeBinaryData(int luminansSubsamling) {
             int chrominansSubsampling = 2;
 
             while (BinaryData.Count >= 8) {
-                DecodeBlock(luminensSubsamling, HuffmanTable.Luminance);
+                DecodeBlock(luminansSubsamling, HuffmanTable.Luminance);
                 DecodeBlock(chrominansSubsampling, HuffmanTable.Chrominance);
             }
         }

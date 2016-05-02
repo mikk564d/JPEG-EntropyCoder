@@ -10,16 +10,6 @@ namespace JPEG_EntropyCoder {
     /// Works as the primary class for this library.
     /// </summary>
     public class JPEGEntropyCoder : IJPEGEntropyCoder {
-
-        /// <summary>
-        /// Loads JPEG image and decodes it.
-        /// </summary>
-        /// <param name="path">Path to JPEG image</param>
-        public JPEGEntropyCoder(string path) {
-            FileHandler = new JPEGFileHandler(path);
-            List<IHuffmanTree> huffmanTrees = BuildHuffmanTrees(FileHandler.DHT);
-            Coder = new EntropyCoder(huffmanTrees, ConvertBytesToBitArray(FileHandler.CompressedImage), GetNumberOfLuminanceBlocksPerMCU( FileHandler.SOF ) );
-        }
         /// <summary>
         /// List with EntropyComponent
         /// </summary>
@@ -31,16 +21,17 @@ namespace JPEG_EntropyCoder {
         private IEntropyCoder Coder { get; }
         private IJPEGFileHandler FileHandler { get; }
 
-        private int GetNumberOfLuminanceBlocksPerMCU(byte[] SOF) {
-            byte luminanceSubsampling = SOF[7]; // Luminance subsampling info in SOF field data.
-
-            /* Either Luminance subsampling is 0x11 or 0x22 */
-            if (luminanceSubsampling == 0x11) {
-                return 1;
-            } else {
-                return 4;
-            }
-        }
+        /// <summary>
+        /// Loads JPEG image and decodes it.
+        /// </summary>
+        /// <param name="path">Path to JPEG image</param>
+        public JPEGEntropyCoder(string path) {
+            FileHandler = new JPEGFileHandler(path);
+            List<IHuffmanTree> huffmanTrees = BuildHuffmanTrees(FileHandler.DHT);
+            BitArray compressedImage = ConvertBytesToBitArray(FileHandler.CompressedImage);
+            int luminensBlocks = GetNumberOfLuminanceBlocksPerMCU(FileHandler.SOF);
+            Coder = new EntropyCoder(huffmanTrees, compressedImage, luminensBlocks);
+        }       
 
         /// <summary>
         /// Builds HuffmanTrees with <paramref name="DHTFromFile"/>
@@ -99,6 +90,17 @@ namespace JPEG_EntropyCoder {
             binData = BitArrayUtilities.ReverseBitArray(binData);
 
             return binData;
+        }
+
+        private int GetNumberOfLuminanceBlocksPerMCU(byte[] SOF) {
+            byte luminanceSubsampling = SOF[7]; // Luminance subsampling info in SOF field data.
+
+            /* Either Luminance subsampling is 0x11 or 0x22 */
+            if (luminanceSubsampling == 0x11) {
+                return 1;
+            } else {
+                return 4;
+            }
         }
 
         /// <summary>

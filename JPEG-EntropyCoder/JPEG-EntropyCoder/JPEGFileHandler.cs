@@ -37,28 +37,145 @@ namespace JPEG_EntropyCoder {
             { EOI_MARKER, new List<uint>() }
         };
 
+        private byte[] _DQT;
+        private byte[] _DHT;
+        private byte[] _SOF;
+        private byte[] _SOS;
+        private byte[] _compressedImage;
+        private byte[] _all;
+
+        /// <summary>
+        /// Contains DQT bytes from the JPEG file.
+        /// </summary>
+        public byte[] DQT {
+            get { return Array.AsReadOnly(_DQT).ToArray(); }
+            private set { _DQT = value; }
+        }
+
+        /// <summary>
+        /// Contains DHT bytes from the JPEG file.
+        /// </summary>
+        public byte[] DHT {
+            get { return Array.AsReadOnly(_DHT).ToArray(); }
+            private set { _DHT = value; }
+        }
+
+        /// <summary>
+        /// Contains SOF bytes from the JPEG file.
+        /// </summary>
+        public byte[] SOF {
+            get { return Array.AsReadOnly(_SOF).ToArray(); }
+            private set { _SOF = value; }
+        }
+
+        /// <summary>
+        /// Contains SOS bytes from the JPEG file.
+        /// </summary>
+        public byte[] SOS {
+            get { return Array.AsReadOnly(_SOS).ToArray(); }
+            private set { _SOS = value; }
+        }
+
+        /// <summary>
+        /// Contains compressed image bytes from the JPEG file.
+        /// </summary>
+        public byte[] CompressedImage {
+            get { return Array.AsReadOnly(_compressedImage).ToArray(); }
+            set {
+                Contract.Requires<ArgumentNullException>(value != null);
+                Contract.Requires<ArgumentException>(value.Length > 0);
+
+                byte[] all = All;
+
+                List<uint> SOSIndexesList = markerIndexes[SOS_MARKER];
+                uint SOSIndex = SOSIndexesList[SOSIndexesList.Count - 1];
+
+                List<uint> EOIIndexesList = markerIndexes[EOI_MARKER];
+                // Garbage bytes can contain markers. Find the first EOI marker after SOS marker.
+                uint EOIIndex = EOIIndexesList.First(markerIndex => markerIndex > SOSIndex);
+
+                uint lengthOfField = GetFieldLength(markerIndexes, SOS_MARKER, SOSIndexesList.Count - 1, all);
+
+                byte[] bytes = all.Take(Convert.ToInt32(SOSIndex + MARKER_LENGTH + LENGTH_OF_FIELD_LENGTH + lengthOfField)).ToArray();
+
+                bytes = bytes.Concat(value).ToArray();
+
+                bytes = bytes.Concat(all.Skip(Convert.ToInt32(EOIIndex))).ToArray();
+
+                All = bytes;
+
+                // Null check to avoid NullReferenceException when accessing length.
+                if (_compressedImage?.Length != value.Length) {
+                    FillMarkerIndexes(markerIndexes, All);
+                }
+
+                _compressedImage = value;
+            }
+        }
+
+        /// <summary>
+        /// Contains all bytes from the JPEG file.
+        /// </summary>
+        public byte[] All {
+            get { return Array.AsReadOnly(_all).ToArray(); }
+            private set { _all = value; }
+        }
+
+        /// <summary>
+        /// Loads bytes from a JPEG file into the instance.
+        /// </summary>
+        /// <param name="bytes">Bytes from the JPEG file you wish to process.</param>
+        public JPEGFileHandler(byte[] bytes) {
+            Contract.Requires<ArgumentNullException>(bytes != null);
+            Contract.Requires<ArgumentException>(bytes.Length > 0);
+
+            All = bytes;
+
+            FillMarkerIndexes(markerIndexes, All);
+
+            uint[] thumbnailIndexes = GetThumbnailIndexes(markerIndexes, All);
+
+            DQT = GetFieldBytes(markerIndexes, DQT_MARKER, thumbnailIndexes[0], thumbnailIndexes[1], All);
+            DHT = GetFieldBytes(markerIndexes, DHT_MARKER, thumbnailIndexes[0], thumbnailIndexes[1], All);
+
+            /* Image contains either SOF0 or SOF2 - never both. */
+            if (markerIndexes[SOF0_MARKER].Count > 0)
+                SOF = GetFieldBytes(markerIndexes, SOF0_MARKER, thumbnailIndexes[0], thumbnailIndexes[1], All);
+            else
+                SOF = GetFieldBytes(markerIndexes, SOF2_MARKER, thumbnailIndexes[0], thumbnailIndexes[1], All);
+
+            SOS = GetFieldBytes(markerIndexes, SOS_MARKER, thumbnailIndexes[0], thumbnailIndexes[1], All);
+
+            CompressedImage = GetCompressedImageBytes(markerIndexes, All);
+        }
+
+        /// <summary>
+        /// Loads a JPEG file into the instance.
+        /// </summary>
+        /// <param name="path">Path to the JPEG file you wish to process.</param>
+        public JPEGFileHandler(string path) : this(File.ReadAllBytes(path)) {
+            Contract.Requires<ArgumentNullException>(path != null);
+            Contract.Requires<ArgumentException>(path.Length > 0);
+        }
+
         /// <summary>
         /// Fills the markerIndexes dictionary with all indexes for all found markers.
         /// </summary>
         /// <param name="dictionary">Dictionary to be filled with marker indexes.</param>
         /// <param name="bytes">Array of bytes that will be searched for markers.</param>
-        private void FillMarkerIndexes( Dictionary<byte, List<uint>> dictionary, byte[] bytes ) {
-            Contract.Requires<ArgumentNullException>( dictionary != null );
-            Contract.Requires<ArgumentNullException>( bytes != null );
-            Contract.Requires<ArgumentException>( bytes.Length > 1 );
-
+        private void FillMarkerIndexes(Dictionary<byte, List<uint>> dictionary, byte[] bytes) {
             /* Empty the dictionary before finding all indexes.
              * This is done because indexes might have changed after setting compressedImage. */
-            foreach ( var item in dictionary ) {
-                dictionary[ item.Key ].Clear();
+            foreach (var item in dictionary) {
+                dictionary[item.Key].Clear();
             }
 
             /* Iterate through bytes. If a byte is the marker prefix, check if next byte is either of the markers. */
-            for ( uint i = 0; i < bytes.Length - 1; i++ ) {
-                if ( bytes[ i ] == MARKER_PREFIX ) {
-                    foreach ( byte marker in markers ) {
-                        if ( bytes[ i + 1 ] == marker )
-                            dictionary[ marker ].Add( i );
+            for (uint i = 0; i < bytes.Length - 1; i++) {
+                if (bytes[i] == MARKER_PREFIX) {
+                    foreach (byte marker in markers) {
+                        if (bytes[i + 1] == marker)
+                            dictionary[marker].Add(i);
                     }
                 }
             }
@@ -70,48 +187,37 @@ namespace JPEG_EntropyCoder {
         /// </summary>
         /// <param name="dictionary">Dictionary with marker indexes.</param>
         /// <param name="bytes">Array of bytes the markers were found in.</param>
-        /// <returns>Array with start and end index of the thumbnail. First value is the start index. Second value is the end index.</returns>
-        private uint[] GetThumbnailIndexes( Dictionary<byte, List<uint>> dictionary, byte[] bytes ) {
-            Contract.Requires<ArgumentNullException>( dictionary != null );
-            Contract.Requires<ArgumentException>( dictionary[ SOI_MARKER ].Count > 0 );
-            Contract.Requires<ArgumentException>( dictionary[ EOI_MARKER ].Count > 0 );
-            Contract.Requires<ArgumentNullException>( bytes != null );
-            Contract.Requires<ArgumentException>( bytes.Length > 0 );
-
+        /// <returns>Array with start and end index of the thumbnail. First value is the start index.
+        ///  Second value is the end index.</returns>
+        private uint[] GetThumbnailIndexes(Dictionary<byte, List<uint>> dictionary, byte[] bytes) {
             /* Initialize to unreachable values so evaluation in GetFieldBytes always evaluates to true when there is no thumbnail. */
-            uint[] thumbnailIndexes = { Convert.ToUInt32( bytes.Length ), Convert.ToUInt32( bytes.Length ) };
+            uint[] thumbnailIndexes = { Convert.ToUInt32(bytes.Length), Convert.ToUInt32(bytes.Length) };
 
-            if ( dictionary[ SOI_MARKER ].Count > 1 ) {
-                thumbnailIndexes[ 0 ] = dictionary[ SOI_MARKER ][ 1 ]; // Second SOI marker
-                thumbnailIndexes[ 1 ] = dictionary[ EOI_MARKER ][ 0 ]; // First EOI marker
+            if (dictionary[SOI_MARKER].Count > 1) {
+                thumbnailIndexes[0] = dictionary[SOI_MARKER][1]; // Second SOI marker
+                thumbnailIndexes[1] = dictionary[EOI_MARKER][0]; // First EOI marker
             }
 
             return thumbnailIndexes;
         }
 
         /// <summary>
-        /// Calculates and returns the length of the field in relation to the given marker and index of the specific marker in the given dictionary.
+        /// Calculates and returns the length of the field in relation to the given marker 
+        /// and index of the specific marker in the given dictionary.
         /// </summary>
         /// <param name="dictionary">Dictionary with marker indexes.</param>
         /// <param name="marker">Marker to calculate length of field for.</param>
         /// <param name="dictionaryMarkerIndex">Index of the specific marker in the dictionary.</param>
         /// <param name="bytes">Array of bytes the markers were found in.</param>
         /// <returns>Length of the field of the given specific marker.</returns>
-        private uint GetFieldLength( Dictionary<byte, List<uint>> dictionary, byte marker, int dictionaryMarkerIndex, byte[] bytes ) {
-            Contract.Requires<ArgumentNullException>( dictionary != null );
-            Contract.Requires<ArgumentException>( dictionary[ marker ].Count > 0 );
-            Contract.Requires<ArgumentNullException>( bytes != null );
-            Contract.Requires<ArgumentException>( bytes.Length > 1 );
-            Contract.Requires<ArgumentException>( marker == DQT_MARKER || marker == DHT_MARKER || marker == SOF0_MARKER || marker == SOF2_MARKER || marker == SOS_MARKER );
-            Contract.Requires<ArgumentException>( dictionaryMarkerIndex > -1 && dictionaryMarkerIndex < dictionary[ marker ].Count );
-
-            uint markerIndex = dictionary[ marker ][ dictionaryMarkerIndex ];
+        private uint GetFieldLength(Dictionary<byte, List<uint>> dictionary, byte marker, int dictionaryMarkerIndex, byte[] bytes) {
+            uint markerIndex = dictionary[marker][dictionaryMarkerIndex];
             uint lengthOfFieldIndex = markerIndex + MARKER_LENGTH;
 
             /* Array of bytes is neccesary in order to convert to uint32. */
-            byte[] lengthOfField = { bytes[ lengthOfFieldIndex + 1 ], bytes[ lengthOfFieldIndex ], 0, 0 }; // Little endian
+            byte[] lengthOfField = { bytes[lengthOfFieldIndex + 1], bytes[lengthOfFieldIndex], 0, 0 }; // Little endian
 
-            return BitConverter.ToUInt32( lengthOfField, 0 ) - LENGTH_OF_FIELD_LENGTH;
+            return BitConverter.ToUInt32(lengthOfField, 0) - LENGTH_OF_FIELD_LENGTH;
         }
 
         /// <summary>
@@ -124,25 +230,20 @@ namespace JPEG_EntropyCoder {
         /// <param name="thumbnailEndIndex">End index of the thumbnail.</param>
         /// <param name="bytes">Array of bytes the markers were found in.</param>
         /// <returns>Array of bytes containing the bytes for the given marker.</returns>
-        private byte[] GetFieldBytes( Dictionary<byte, List<uint>> dictionary, byte marker,
-                                      uint thumbnailStartIndex, uint thumbnailEndIndex, byte[] bytes ) {
-            Contract.Requires<ArgumentNullException>( dictionary != null );
-            Contract.Requires<ArgumentException>( dictionary[ marker ].Count > 0 );
-            Contract.Requires<ArgumentNullException>( bytes != null );
-            Contract.Requires<ArgumentException>( bytes.Length > 0 );
-            Contract.Requires<ArgumentException>( marker == DQT_MARKER || marker == DHT_MARKER || marker == SOF0_MARKER || marker == SOF2_MARKER || marker == SOS_MARKER );
+        private byte[] GetFieldBytes(Dictionary<byte, List<uint>> dictionary, byte marker,
+                           uint thumbnailStartIndex, uint thumbnailEndIndex, byte[] bytes) {
+            
+            List<uint> markerIndexesList = dictionary[marker];
+            byte[] fieldBytes = { };
 
-            List<uint> markerIndexesList = dictionary[ marker ];
-            byte[] fieldBytes = {};
-
-            for ( int i = 0; i < markerIndexesList.Count; i++ ) {
-                if ( markerIndexesList[ i ] > dictionary[ SOI_MARKER ][ 0 ]
-                     && markerIndexesList[ i ] < dictionary[ EOI_MARKER ][ dictionary[ EOI_MARKER ].Count - 1 ]
-                     && ( markerIndexesList[ i ] < thumbnailStartIndex || markerIndexesList[ i ] > thumbnailEndIndex ) ) {
-                    uint lengthOfField = GetFieldLength( dictionary, marker, i, bytes );
+            for (int i = 0; i < markerIndexesList.Count; i++) {
+                if (markerIndexesList[i] > dictionary[SOI_MARKER][0]
+                     && markerIndexesList[i] < dictionary[EOI_MARKER][dictionary[EOI_MARKER].Count - 1]
+                     && (markerIndexesList[i] < thumbnailStartIndex || markerIndexesList[i] > thumbnailEndIndex)) {
+                    uint lengthOfField = GetFieldLength(dictionary, marker, i, bytes);
                     fieldBytes = fieldBytes.Concat(
-                        bytes.Skip( Convert.ToInt32( markerIndexesList[ i ] + MARKER_LENGTH + LENGTH_OF_FIELD_LENGTH ) )
-                            .Take( Convert.ToInt32( lengthOfField ) ) ).ToArray();
+                        bytes.Skip(Convert.ToInt32(markerIndexesList[i] + MARKER_LENGTH + LENGTH_OF_FIELD_LENGTH))
+                            .Take(Convert.ToInt32(lengthOfField))).ToArray();
                 }
             }
 
@@ -155,175 +256,30 @@ namespace JPEG_EntropyCoder {
         /// <param name="dictionary">Dictionary with marker indexes.</param>
         /// <param name="bytes">Array of bytes the markers were found in.</param>
         /// <returns>Array of bytes containing the compressed image bytes.</returns>
-        private byte[] GetCompressedImageBytes( Dictionary<byte, List<uint>> dictionary, byte[] bytes ) {
-            Contract.Requires<ArgumentNullException>( dictionary != null );
-            Contract.Requires<ArgumentException>( dictionary[ SOS_MARKER ].Count > 0 );
-            Contract.Requires<ArgumentException>( dictionary[ EOI_MARKER ].Count > 0 );
-            Contract.Requires<ArgumentNullException>( bytes != null );
-            Contract.Requires<ArgumentException>( bytes.Length > 0 );
+        private byte[] GetCompressedImageBytes(Dictionary<byte, List<uint>> dictionary, byte[] bytes) {
+            List<uint> SOSIndexesList = dictionary[SOS_MARKER];
 
-            List<uint> SOSIndexesList = dictionary[ SOS_MARKER ];
-            uint SOSIndex = SOSIndexesList[ SOSIndexesList.Count - 1 ]; // SOS marker can occur multiple times. Always take the last.
-            uint lengthOfField = GetFieldLength( dictionary, SOS_MARKER, dictionary[ SOS_MARKER ].Count - 1, bytes );
+            // SOS marker can occur multiple times. Always take the last.
+            uint SOSIndex = SOSIndexesList[SOSIndexesList.Count - 1]; 
+            uint lengthOfField = GetFieldLength(dictionary, SOS_MARKER, dictionary[SOS_MARKER].Count - 1, bytes);
             uint compressedImageIndex = SOSIndex + MARKER_LENGTH + LENGTH_OF_FIELD_LENGTH + lengthOfField;
-            List<uint> EOIIndexesList = dictionary[ EOI_MARKER ];
-            uint EOIIndex = EOIIndexesList.First( markerIndex => markerIndex > SOSIndex ); // Garbage bytes can contain markers. Find the first EOI marker after SOS marker.
+            List<uint> EOIIndexesList = dictionary[EOI_MARKER];
 
-            return bytes.Skip( Convert.ToInt32( compressedImageIndex ) ).Take( Convert.ToInt32( EOIIndex - compressedImageIndex ) ).ToArray();
-        }
+            // Garbage bytes can contain markers. Find the first EOI marker after SOS marker.
+            uint EOIIndex = EOIIndexesList.First(markerIndex => markerIndex > SOSIndex); 
 
-        private byte[] _DQT;
-        /// <summary>
-        /// Contains DQT bytes from the JPEG file.
-        /// </summary>
-        public byte[] DQT {
-            get { return Array.AsReadOnly( _DQT ).ToArray(); }
-            private set {
-                Contract.Requires<ArgumentNullException>( value != null );
-                Contract.Requires<ArgumentException>( value.Length > 0 );
-
-                _DQT = value;
-            }
-        }
-
-        private byte[] _DHT;
-        /// <summary>
-        /// Contains DHT bytes from the JPEG file.
-        /// </summary>
-        public byte[] DHT {
-            get { return Array.AsReadOnly( _DHT ).ToArray(); }
-            private set {
-                Contract.Requires<ArgumentNullException>( value != null );
-                Contract.Requires<ArgumentException>( value.Length > 0 );
-
-                _DHT = value;
-            }
-        }
-
-        private byte[] _SOF;
-        /// <summary>
-        /// Contains SOF bytes from the JPEG file.
-        /// </summary>
-        public byte[] SOF {
-            get { return Array.AsReadOnly( _SOF ).ToArray(); }
-            private set {
-                Contract.Requires<ArgumentNullException>( value != null );
-                Contract.Requires<ArgumentException>( value.Length > 0 );
-
-                _SOF = value;
-            }
-        }
-
-        private byte[] _SOS;
-        /// <summary>
-        /// Contains SOS bytes from the JPEG file.
-        /// </summary>
-        public byte[] SOS {
-            get { return Array.AsReadOnly( _SOS ).ToArray(); }
-            private set {
-                Contract.Requires<ArgumentNullException>( value != null );
-                Contract.Requires<ArgumentException>( value.Length > 0 );
-
-                _SOS = value;
-            }
-        }
-
-        private byte[] _compressedImage;
-        /// <summary>
-        /// Contains compressed image bytes from the JPEG file.
-        /// </summary>
-        public byte[] CompressedImage {
-            get { return Array.AsReadOnly( _compressedImage ).ToArray(); }
-            set {
-                Contract.Requires<ArgumentNullException>( value != null );
-                Contract.Requires<ArgumentException>( value.Length > 0 );
-
-                byte[] all = All;
-
-                List<uint> SOSIndexesList = markerIndexes[ SOS_MARKER ];
-                uint SOSIndex = SOSIndexesList[ SOSIndexesList.Count - 1 ];
-
-                List<uint> EOIIndexesList = markerIndexes[ EOI_MARKER ];
-                uint EOIIndex = EOIIndexesList.First( markerIndex => markerIndex > SOSIndex ); // Garbage bytes can contain markers. Find the first EOI marker after SOS marker.
-
-                uint lengthOfField = GetFieldLength( markerIndexes, SOS_MARKER, SOSIndexesList.Count - 1, all );
-
-                byte[] bytes =
-                    all.Take( Convert.ToInt32( SOSIndex + MARKER_LENGTH + LENGTH_OF_FIELD_LENGTH + lengthOfField ) ).ToArray();
-
-                bytes = bytes.Concat( value ).ToArray();
-
-                bytes = bytes.Concat( all.Skip( Convert.ToInt32( EOIIndex ) ) ).ToArray();
-
-                All = bytes;
-
-                if ( _compressedImage == null || _compressedImage.Length != value.Length ) // Null check to avoid NullReferenceException when accessing length.
-                    FillMarkerIndexes( markerIndexes, All );
-
-                _compressedImage = value;
-            }
-        }
-
-        private byte[] _all;
-        /// <summary>
-        /// Contains all bytes from the JPEG file.
-        /// </summary>
-        public byte[] All {
-            get { return Array.AsReadOnly( _all ).ToArray(); }
-            private set {
-                Contract.Requires<ArgumentNullException>( value != null );
-                Contract.Requires<ArgumentException>( value.Length > 1 );
-
-                _all = value;
-            }
-        }
-
-        /// <summary>
-        /// Loads bytes from a JPEG file into the instance.
-        /// </summary>
-        /// <param name="bytes">Bytes from the JPEG file you wish to process.</param>
-        public JPEGFileHandler( byte[] bytes ) {
-            Contract.Requires<ArgumentNullException>( bytes != null );
-            Contract.Requires<ArgumentException>( bytes.Length > 0 );
-            
-            All = bytes;
-
-            FillMarkerIndexes( markerIndexes, All );
-            
-            uint[] thumbnailIndexes = GetThumbnailIndexes( markerIndexes, All );
-
-            DQT = GetFieldBytes( markerIndexes, DQT_MARKER, thumbnailIndexes[ 0 ], thumbnailIndexes[ 1 ], All );
-            DHT = GetFieldBytes( markerIndexes, DHT_MARKER, thumbnailIndexes[ 0 ], thumbnailIndexes[ 1 ], All );
-
-            /* Image contains either SOF0 or SOF2 - never both. */
-            if ( markerIndexes[ SOF0_MARKER ].Count > 0 )
-                SOF = GetFieldBytes( markerIndexes, SOF0_MARKER, thumbnailIndexes[ 0 ], thumbnailIndexes[ 1 ], All );
-            else
-                SOF = GetFieldBytes( markerIndexes, SOF2_MARKER, thumbnailIndexes[ 0 ], thumbnailIndexes[ 1 ], All );
-
-            SOS = GetFieldBytes( markerIndexes, SOS_MARKER, thumbnailIndexes[ 0 ], thumbnailIndexes[ 1 ], All );
-
-            CompressedImage = GetCompressedImageBytes( markerIndexes, All );
-        }
-
-        /// <summary>
-        /// Loads a JPEG file into the instance.
-        /// </summary>
-        /// <param name="path">Path to the JPEG file you wish to process.</param>
-        public JPEGFileHandler( string path ) : this( File.ReadAllBytes( path ) ) {
-            Contract.Requires<ArgumentNullException>( path != null );
-            Contract.Requires<ArgumentException>( path.Length > 0 );
+            return bytes.Skip(Convert.ToInt32(compressedImageIndex)).Take(Convert.ToInt32(EOIIndex - compressedImageIndex)).ToArray();
         }
 
         /// <summary>
         /// Saves a JPEG file at the given path based on all contained bytes.
         /// </summary>
         /// <param name="path">Path to the JPEG file you wish to save.</param>
-        public void SaveFile( string path ) {
-            Contract.Requires<ArgumentNullException>( path != null );
-            Contract.Requires<ArgumentException>( path.Length > 0 );
+        public void SaveFile(string path) {
+            Contract.Requires<ArgumentNullException>(path != null);
+            Contract.Requires<ArgumentException>(path.Length > 0);
 
-            File.WriteAllBytes( path, All );
+            File.WriteAllBytes(path, All);
         }
     }
 }
