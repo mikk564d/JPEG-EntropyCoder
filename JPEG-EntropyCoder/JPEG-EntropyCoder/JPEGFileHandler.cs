@@ -37,6 +37,7 @@ namespace JPEG_EntropyCoder {
             { EOI_MARKER, new List<uint>() }
         };
 
+        /* Private "property-variables" */
         private byte[] _DQT;
         private byte[] _DHT;
         private byte[] _SOF;
@@ -85,32 +86,40 @@ namespace JPEG_EntropyCoder {
                 Contract.Requires<ArgumentNullException>(value != null);
                 Contract.Requires<ArgumentException>(value.Length > 0);
 
-                byte[] all = All;
-
-                List<uint> SOSIndexesList = markerIndexes[SOS_MARKER];
-                uint SOSIndex = SOSIndexesList[SOSIndexesList.Count - 1];
-
-                List<uint> EOIIndexesList = markerIndexes[EOI_MARKER];
-                // Garbage bytes can contain markers. Find the first EOI marker after SOS marker.
-                uint EOIIndex = EOIIndexesList.First(markerIndex => markerIndex > SOSIndex);
-
-                uint lengthOfField = GetFieldLength(markerIndexes, SOS_MARKER, SOSIndexesList.Count - 1, all);
-
-                byte[] bytes = all.Take(Convert.ToInt32(SOSIndex + MARKER_LENGTH + LENGTH_OF_FIELD_LENGTH + lengthOfField)).ToArray();
-
-                bytes = bytes.Concat(value).ToArray();
-
-                bytes = bytes.Concat(all.Skip(Convert.ToInt32(EOIIndex))).ToArray();
-
-                All = bytes;
-
-                // Null check to avoid NullReferenceException when accessing length.
+                UpdateAllWithCompressedImage(value);
+                
+                /* Elvis operator is used because _compressedImage will be null first time property is set. */
                 if (_compressedImage?.Length != value.Length) {
                     FillMarkerIndexes(markerIndexes, All);
                 }
 
                 _compressedImage = value;
             }
+        }
+
+        /// <summary>
+        /// Updates All property with the compressedImage bytes.
+        /// </summary>
+        /// <param name="compressedImage">Compressed image bytes from JPEG file.</param>
+        private void UpdateAllWithCompressedImage(byte[] compressedImage) {
+            byte[] all = All;
+
+            List<uint> SOSIndexesList = markerIndexes[SOS_MARKER];
+            uint SOSIndex = SOSIndexesList[SOSIndexesList.Count - 1];
+
+            /* Garbage bytes can contain markers. Find the first EOI marker after SOS marker. */
+            List<uint> EOIIndexesList = markerIndexes[EOI_MARKER];
+            uint EOIIndex = EOIIndexesList.First(markerIndex => markerIndex > SOSIndex);
+
+            uint lengthOfField = GetFieldLength(markerIndexes, SOS_MARKER, SOSIndexesList.Count - 1, all);
+
+            byte[] bytes = all.Take(Convert.ToInt32(SOSIndex + MARKER_LENGTH + LENGTH_OF_FIELD_LENGTH + lengthOfField)).ToArray();
+
+            bytes = bytes.Concat(compressedImage).ToArray();
+
+            bytes = bytes.Concat(all.Skip(Convert.ToInt32(EOIIndex))).ToArray();
+
+            All = bytes;
         }
 
         /// <summary>
@@ -259,13 +268,13 @@ namespace JPEG_EntropyCoder {
         private byte[] GetCompressedImageBytes(Dictionary<byte, List<uint>> dictionary, byte[] bytes) {
             List<uint> SOSIndexesList = dictionary[SOS_MARKER];
 
-            // SOS marker can occur multiple times. Always take the last.
+            /* SOS marker can occur multiple times. Always take the last. */
             uint SOSIndex = SOSIndexesList[SOSIndexesList.Count - 1]; 
             uint lengthOfField = GetFieldLength(dictionary, SOS_MARKER, dictionary[SOS_MARKER].Count - 1, bytes);
             uint compressedImageIndex = SOSIndex + MARKER_LENGTH + LENGTH_OF_FIELD_LENGTH + lengthOfField;
             List<uint> EOIIndexesList = dictionary[EOI_MARKER];
 
-            // Garbage bytes can contain markers. Find the first EOI marker after SOS marker.
+            /* Garbage bytes can contain markers. Find the first EOI marker after SOS marker. */
             uint EOIIndex = EOIIndexesList.First(markerIndex => markerIndex > SOSIndex); 
 
             return bytes.Skip(Convert.ToInt32(compressedImageIndex)).Take(Convert.ToInt32(EOIIndex - compressedImageIndex)).ToArray();
