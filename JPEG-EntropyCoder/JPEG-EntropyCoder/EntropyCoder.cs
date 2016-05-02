@@ -20,10 +20,6 @@ namespace JPEG_EntropyCoder {
 
 
         public BitArray EncodeToBitArray() {
-            return BitArrayUtilities.ReverseBitArray(new BitArray(EncodeToByteArray()));
-        }
-
-        public byte[] EncodeToByteArray() {
             int currentIndex = 0;
 
             BitArray bits = new BitArray(0);
@@ -52,6 +48,12 @@ namespace JPEG_EntropyCoder {
                 bits[currentIndex++] = true;
             }
 
+            return bits;
+        }
+
+        public byte[] EncodeToByteArray() {
+            BitArray bits = EncodeToBitArray();
+            
             byte[] bytesBeforeBitstuff = new byte[bits.Count / 8];
 
             bits = BitArrayUtilities.ChangeEndianOnBitArray(bits);
@@ -71,7 +73,7 @@ namespace JPEG_EntropyCoder {
 
 
         private void DecodeBinaryData() {
-            int luminensSubsamling = 1;
+            int luminensSubsamling = 4;
             int chrominensSubsampling = 2;
 
             while (BinaryData.Count >= 8) {
