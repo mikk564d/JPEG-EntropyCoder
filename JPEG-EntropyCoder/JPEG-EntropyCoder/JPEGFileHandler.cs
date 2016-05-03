@@ -87,7 +87,7 @@ namespace JPEG_EntropyCoder {
                 Contract.Requires<ArgumentException>(value.Length > 0);
 
                 UpdateAllWithCompressedImage(value);
-                
+
                 /* Elvis operator is used because _compressedImage will be null first time property is set. */
                 if (_compressedImage?.Length != value.Length) {
                     FillMarkerIndexes(markerIndexes, All);
@@ -241,7 +241,7 @@ namespace JPEG_EntropyCoder {
         /// <returns>Array of bytes containing the bytes for the given marker.</returns>
         private byte[] GetFieldBytes(Dictionary<byte, List<uint>> dictionary, byte marker,
                            uint thumbnailStartIndex, uint thumbnailEndIndex, byte[] bytes) {
-            
+
             List<uint> markerIndexesList = dictionary[marker];
             byte[] fieldBytes = { };
 
@@ -269,13 +269,13 @@ namespace JPEG_EntropyCoder {
             List<uint> SOSIndexesList = dictionary[SOS_MARKER];
 
             /* SOS marker can occur multiple times. Always take the last. */
-            uint SOSIndex = SOSIndexesList[SOSIndexesList.Count - 1]; 
+            uint SOSIndex = SOSIndexesList[SOSIndexesList.Count - 1];
             uint lengthOfField = GetFieldLength(dictionary, SOS_MARKER, dictionary[SOS_MARKER].Count - 1, bytes);
             uint compressedImageIndex = SOSIndex + MARKER_LENGTH + LENGTH_OF_FIELD_LENGTH + lengthOfField;
             List<uint> EOIIndexesList = dictionary[EOI_MARKER];
 
             /* Garbage bytes can contain markers. Find the first EOI marker after SOS marker. */
-            uint EOIIndex = EOIIndexesList.First(markerIndex => markerIndex > SOSIndex); 
+            uint EOIIndex = EOIIndexesList.First(markerIndex => markerIndex > SOSIndex);
 
             return bytes.Skip(Convert.ToInt32(compressedImageIndex)).Take(Convert.ToInt32(EOIIndex - compressedImageIndex)).ToArray();
         }
