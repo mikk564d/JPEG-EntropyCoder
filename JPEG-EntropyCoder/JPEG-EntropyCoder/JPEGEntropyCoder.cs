@@ -19,8 +19,8 @@ namespace JPEG_EntropyCoder {
             set { Coder.EntropyComponents = value; }
         }
 
-        private IEntropyCoder Coder { get; }
         private IJPEGFileHandler FileHandler { get; }
+        private IEntropyCoder Coder { get; }
 
         /// <summary>
         /// Loads JPEG image and decodes it.
