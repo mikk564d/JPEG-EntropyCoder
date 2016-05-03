@@ -1,23 +1,21 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 using JPEG_EntropyCoder.Components;
 
 namespace JPEG_EntropyCoder.Interfaces {
     /// <summary>
-    /// This is the libraries main interface.
+    /// Wrapper interface to directly execute entropy coding on JPEG file.
+    /// Alternatively, combine IJPEGFileHandler, IHuffmanTree and IEntropyCoder to do it yourself.
     /// </summary>
     public interface IJPEGEntropyCoder {
         /// <summary>
-        /// List with EntropyComponent
+        /// List with EntropyComponents
         /// </summary>
         List<EntropyComponent> EntropyComponents { get; set; }
+        
         /// <summary>
-        /// Saves the file to <paramref name="path"/>
+        /// Saves the JPEG file to <paramref name="path"/>
         /// </summary>
-        /// <param name="path"></param>
+        /// <param name="path">Path to JPEG file.</param>
         void Save(string path);
     }
 }
