@@ -7,11 +7,12 @@ using Utilities;
 
 namespace JPEG_EntropyCoder {
     /// <summary>
-    /// Works as the primary class for this library.
+    /// Wrapper class to directly execute entropy coding on JPEG file.
+    /// Alternatively, combine JPEGFileHandler, HuffmanTree and EntropyCoder to do it yourself.
     /// </summary>
     public class JPEGEntropyCoder : IJPEGEntropyCoder {
         /// <summary>
-        /// List with EntropyComponent
+        /// List with EntropyComponents
         /// </summary>
         public List<EntropyComponent> EntropyComponents {
             get { return Coder.EntropyComponents; }
@@ -27,10 +28,17 @@ namespace JPEG_EntropyCoder {
         /// <param name="path">Path to JPEG image</param>
         public JPEGEntropyCoder(string path) {
             FileHandler = new JPEGFileHandler(path);
+
             List<IHuffmanTree> huffmanTrees = BuildHuffmanTrees(FileHandler.DHT);
-            BitArray compressedImage = ConvertBytesToBitArray(FileHandler.CompressedImage);
-            int luminensBlocks = GetNumberOfLuminanceBlocksPerMCU(FileHandler.SOF);
-            Coder = new EntropyCoder(huffmanTrees, compressedImage, luminensBlocks);
+
+            byte[] compressedImageWithoutEscapeBytes = RemoveEscapeBytes(FileHandler.CompressedImage);
+            BitArray compressedImage = new BitArray(compressedImageWithoutEscapeBytes);
+            compressedImage = BitArrayUtilities.ChangeEndianOnBitArray(compressedImage);
+            compressedImage = BitArrayUtilities.ReverseBitArray(compressedImage);
+
+            int numberOfLuminanceBlocks = GetNumberOfLuminanceBlocksPerMCU(FileHandler.SOF);
+
+            Coder = new EntropyCoder(huffmanTrees, compressedImage, numberOfLuminanceBlocks);
         }
 
         /// <summary>
@@ -71,25 +79,20 @@ namespace JPEG_EntropyCoder {
         }
 
         /// <summary>
-        /// Convert byte[] to BitArray and reverse the BitArray.
+        /// Removes escape bytes (0x00 after 0xFF) from given bytes.
         /// </summary>
-        /// <param name="bytesFromFile"></param>
-        /// <returns>Returns BitArray</returns>
-        private BitArray ConvertBytesToBitArray(byte[] bytesFromFile) {
-            List<byte> bytes = new List<byte>();
+        /// <param name="bytes">Bytes from which escape bytes will be removed from.</param>
+        /// <returns>Array of bytes without escape bytes.</returns>
+        private byte[] RemoveEscapeBytes(byte[] bytes) {
+            List<byte> byteList = new List<byte> {bytes[0]};
 
-            bytes.Add(bytesFromFile[0]);
-            for (int i = 1; i < bytesFromFile.Length; i++) {
-                if (!(bytesFromFile[i] == 0x00 && bytesFromFile[i - 1] == 0xFF)) {
-                    bytes.Add(bytesFromFile[i]);
+            for (int i = 1; i < bytes.Length; i++) {
+                if (!(bytes[i - 1] == 0xFF && bytes[i] == 0x00)) {
+                    byteList.Add(bytes[i]);
                 }
             }
 
-            BitArray binData = new BitArray(bytes.ToArray());
-            binData = BitArrayUtilities.ChangeEndianOnBitArray(binData);
-            binData = BitArrayUtilities.ReverseBitArray(binData);
-
-            return binData;
+            return byteList.ToArray();
         }
 
         ///<summary>
@@ -109,9 +112,9 @@ namespace JPEG_EntropyCoder {
         }
 
         /// <summary>
-        /// Save the JPEG image to <paramref name="path"/>
+        /// Saves the JPEG file to <paramref name="path"/>
         /// </summary>
-        /// <param name="path"></param>
+        /// <param name="path">Path to JPEG file.</param>
         public void Save(string path) {
             FileHandler.CompressedImage = Coder.EncodeToByteArray();
             FileHandler.SaveFile(path);
