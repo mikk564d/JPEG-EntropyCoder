@@ -284,7 +284,7 @@ namespace JPEG_EntropyCoder {
         /// Saves a JPEG file at the given path based on all contained bytes.
         /// </summary>
         /// <param name="path">Path to the JPEG file you wish to save.</param>
-        public void SaveFile(string path) {
+        public void Save(string path) {
             Contract.Requires<ArgumentNullException>(path != null);
             Contract.Requires<ArgumentException>(path.Length > 0);
 

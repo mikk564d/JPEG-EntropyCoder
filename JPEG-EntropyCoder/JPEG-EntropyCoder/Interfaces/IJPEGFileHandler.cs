@@ -39,6 +39,6 @@
         /// Saves a JPEG file at the given path based on all contained bytes.
         /// </summary>
         /// <param name="path">Path to the JPEG file you wish to save.</param>
-        void SaveFile(string path);
+        void Save(string path);
     }
 }
