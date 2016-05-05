@@ -12,7 +12,7 @@ namespace JPEG_EntropyCoder {
     /// </summary>
     public class JPEGEntropyCoder : IJPEGEntropyCoder {
         /// <summary>
-        /// List with EntropyComponents
+        /// List with EntropyComponents. Getting this returns a reference to the list - NOT a copy.
         /// </summary>
         public List<EntropyComponent> EntropyComponents {
             get { return Coder.EntropyComponents; }

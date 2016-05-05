@@ -8,7 +8,7 @@ namespace JPEG_EntropyCoder.Interfaces {
     /// </summary>
     public interface IJPEGEntropyCoder {
         /// <summary>
-        /// List with EntropyComponents
+        /// List with EntropyComponents. Getting this returns a reference to the list - NOT a copy.
         /// </summary>
         List<EntropyComponent> EntropyComponents { get; set; }
         
