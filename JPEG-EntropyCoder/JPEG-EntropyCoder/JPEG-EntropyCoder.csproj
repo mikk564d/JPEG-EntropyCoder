@@ -94,6 +94,7 @@
   <ItemGroup>
     <Compile Include="Components\ACComponent.cs" />
     <Compile Include="Components\EntropyValueComponent.cs" />
+    <Compile Include="Components\ZeroFillComponent.cs" />
     <Compile Include="EntropyCoder.cs" />
     <Compile Include="Components\DCComponent.cs" />
     <Compile Include="Components\EntropyComponent.cs" />

@@ -26,7 +26,7 @@ namespace JPEG_EntropyCoder {
         /// <param name="binaddr">Should contain the expected address of this node. Should be empty if DHT is not null.</param>
         /// <param name="DHT">An array representation of a DHT as it appears in a JPEG file.</param>
         public HuffmanNode(BitArray binaddr, byte[] DHT = null) {
-            Contract.Requires(DHT == null || (DHT != null && (binaddr == null || binaddr.Length == 0)));
+            Contract.Requires<ArgumentException>(DHT == null || (DHT != null && (binaddr == null || binaddr.Length == 0)));
 
             if (DHT != null) {
                 this.PopulateLists(DHT);
