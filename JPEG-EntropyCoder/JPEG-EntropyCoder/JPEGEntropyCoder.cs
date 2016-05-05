@@ -117,7 +117,7 @@ namespace JPEG_EntropyCoder {
         /// <param name="path">Path to JPEG file.</param>
         public void Save(string path) {
             FileHandler.CompressedImage = Coder.EncodeToByteArray();
-            FileHandler.SaveFile(path);
+            FileHandler.Save(path);
         }
     }
 }
