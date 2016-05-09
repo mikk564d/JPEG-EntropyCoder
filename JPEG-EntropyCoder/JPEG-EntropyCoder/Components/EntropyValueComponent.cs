@@ -7,7 +7,7 @@ namespace JPEG_EntropyCoder.Components {
         public BitArray Amplitude { get; set; }
 
         public bool LSB {
-            get { return Amplitude[Amplitude.Length]; }
+            get { return Amplitude[Amplitude.Length - 1]; }
             set { Amplitude[Amplitude.Length] = value ; }
         }
 
