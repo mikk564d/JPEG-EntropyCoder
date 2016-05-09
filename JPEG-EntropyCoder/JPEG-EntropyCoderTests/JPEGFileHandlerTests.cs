@@ -65,9 +65,9 @@ namespace JPEG_EntropyCoderTests {
         }
 
         [Test]
-        public void SaveFile() {
+        public void Save() {
             string testFilePath = $@"{rootPath}\Pictures\TestFile.jpg";
-            fileHandler.SaveFile( testFilePath );
+            fileHandler.Save( testFilePath );
             byte[] actualBytes = File.ReadAllBytes( testFilePath );
             Assert.AreEqual( expectedBytes[ ALL_STRING ], actualBytes );
         }
