@@ -85,7 +85,6 @@ namespace JPEG_EntropyCoder {
         /// <param name="isDC">Bool to know if its an DC EntropyComponent</param>
         /// <returns>Returns true if EOBComponent was created.</returns>
         private bool DecodeHuffmanHexValue(HuffmanTable table, bool isDC, ref int count) {
-            count++;
             byte huffmanLeafByte;
             BitArray amplitude = new BitArray(0);
             BitArray huffmanTreePath;
@@ -93,6 +92,7 @@ namespace JPEG_EntropyCoder {
             GetByteFromHuffmantree(out huffmanTreePath, out huffmanLeafByte, table);
             BinaryData.Length -= huffmanTreePath.Length;
             if (huffmanLeafByte == 0xF0) {
+                count += 0xF;
                 EntropyComponents.Add(new ZeroFillComponent(huffmanTreePath, huffmanLeafByte));
             } else if (huffmanLeafByte != 0x00 || (table == HuffmanTable.ChromDC || table == HuffmanTable.LumDC)) {
                 int length = huffmanLeafByte % 16;
@@ -108,6 +108,7 @@ namespace JPEG_EntropyCoder {
                     amplitude.Length += 1;
                     amplitude[0] = false;
                 }
+                count++;
 
                 if (isDC) {
                     EntropyComponents.Add(new DCComponent(huffmanTreePath, huffmanLeafByte, amplitude));
