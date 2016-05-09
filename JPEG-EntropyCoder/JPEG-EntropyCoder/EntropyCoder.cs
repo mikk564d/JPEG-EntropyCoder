@@ -72,8 +72,9 @@ namespace JPEG_EntropyCoder {
             for (int i = 0; i < subsampling; i++) {
                 bool hitEOB = false;
                 DecodeHuffmanHexValue(DC, true, ref count);
-                for (int j = 0; count <= 64 && !hitEOB; j++) {
+                while (count < 64 && !hitEOB) {
                     hitEOB = DecodeHuffmanHexValue(AC, false, ref count);
+                    Console.WriteLine($"{count}");
                 }
             }
         }
@@ -92,11 +93,11 @@ namespace JPEG_EntropyCoder {
             GetByteFromHuffmantree(out huffmanTreePath, out huffmanLeafByte, table);
             BinaryData.Length -= huffmanTreePath.Length;
             if (huffmanLeafByte == 0xF0) {
-                count += 0xF;
+                count += 15;
                 EntropyComponents.Add(new ZeroFillComponent(huffmanTreePath, huffmanLeafByte));
             } else if (huffmanLeafByte != 0x00 || (table == HuffmanTable.ChromDC || table == HuffmanTable.LumDC)) {
                 int length = huffmanLeafByte % 16;
-                count += huffmanLeafByte / 16;
+                count += huffmanLeafByte / 16 + 1;
                 for (int i = BinaryData.Count - 1, j = 0; j < length; i--, j++) {
                     amplitude.Length++;
                     amplitude[j] = BinaryData[i];
@@ -108,7 +109,6 @@ namespace JPEG_EntropyCoder {
                     amplitude.Length += 1;
                     amplitude[0] = false;
                 }
-                count++;
 
                 if (isDC) {
                     EntropyComponents.Add(new DCComponent(huffmanTreePath, huffmanLeafByte, amplitude));
