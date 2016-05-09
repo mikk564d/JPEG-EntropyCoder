@@ -74,7 +74,6 @@ namespace JPEG_EntropyCoder {
                 DecodeHuffmanHexValue(DC, true, ref count);
                 while (count < 64 && !hitEOB) {
                     hitEOB = DecodeHuffmanHexValue(AC, false, ref count);
-                    Console.WriteLine($"{count}");
                 }
             }
         }
