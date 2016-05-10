@@ -48,8 +48,8 @@ namespace JPEG_EntropyCoder {
             int chrominansSubsampling = 2;
 
             while (BinaryData.Count >= 8) {
-                DecodeBlock(luminansSubsamling, HuffmanTable.Luminance);
-                DecodeBlock(chrominansSubsampling, HuffmanTable.Chrominance);
+                DecodeBlock(luminansSubsamling, HuffmanTreeType.Luminance);
+                DecodeBlock(chrominansSubsampling, HuffmanTreeType.Chrominance);
             }
         }
 
@@ -57,27 +57,25 @@ namespace JPEG_EntropyCoder {
         /// Entropy decodes one block.
         /// </summary>
         /// <param name="subsampling">JPEG image supsampling</param>
-        /// <param name="typeTable">Enum that describes the type of block</param>
-        private void DecodeBlock(int subsampling, HuffmanTable typeTable) {
-            HuffmanTable DC;
-            HuffmanTable AC;
+        /// <param name="typeTreeType">Enum that describes the type of block</param>
+        private void DecodeBlock(int subsampling, HuffmanTreeType typeTreeType) {
+            HuffmanTreeType DC;
+            HuffmanTreeType AC;
 
-            if (typeTable == HuffmanTable.Luminance) {
-                DC = HuffmanTable.LumDC;
-                AC = HuffmanTable.LumAC;
+            if (typeTreeType == HuffmanTreeType.Luminance) {
+                DC = HuffmanTreeType.LumDC;
+                AC = HuffmanTreeType.LumAC;
             } else {
-                DC = HuffmanTable.ChromDC;
-                AC = HuffmanTable.ChromAC;
-            }
-
-          
+                DC = HuffmanTreeType.ChromDC;
+                AC = HuffmanTreeType.ChromAC;
+            }         
 
             for (int i = 0; i < subsampling; i++) {
                 int count = 0;
                 bool hitEOB = false;
-                DecodeHuffmanHexValue(DC, true, ref count);
+                DecodeComponent(DC, ref count);
                 while (count < 64 && !hitEOB) {
-                    hitEOB = DecodeHuffmanHexValue(AC, false, ref count);
+                    hitEOB = DecodeComponent(AC, ref count);
                 }
             }
         }
@@ -85,36 +83,37 @@ namespace JPEG_EntropyCoder {
         /// <summary>
         /// Entropy decodes one entropycomponent.
         /// </summary>
-        /// <param name="table">Enum that describes which huffmanTree to use</param>
-        /// <param name="isDC">Bool to know if its an DC EntropyComponent</param>
+        /// <param name="treeType">Enum that describes which huffmanTree to use</param>
+        /// <param name="count">Counter to know when to stop</param>
         /// <returns>Returns true if EOBComponent was created.</returns>
-        private bool DecodeHuffmanHexValue(HuffmanTable table, bool isDC, ref int count) {
+        private bool DecodeComponent(HuffmanTreeType treeType, ref int count) {
             byte huffmanLeafByte;
             BitArray amplitude = new BitArray(0);
             BitArray huffmanTreePath;
 
-            GetByteFromHuffmantree(out huffmanTreePath, out huffmanLeafByte, table);
+            GetByteFromHuffmantree(out huffmanTreePath, out huffmanLeafByte, treeType);
             BinaryData.Length -= huffmanTreePath.Length;
             if (huffmanLeafByte == 0xF0) {
                 count += 15;
                 EntropyComponents.Add(new ZeroFillComponent(huffmanTreePath, huffmanLeafByte));
-            } else if (huffmanLeafByte != 0x00 || (table == HuffmanTable.ChromDC || table == HuffmanTable.LumDC)) {
-                int length = huffmanLeafByte % 16;
-                count += huffmanLeafByte / 16;
-                for (int i = BinaryData.Count - 1, j = 0; j < length; i--, j++) {
+            } else if (huffmanLeafByte != 0x00 || (treeType == HuffmanTreeType.ChromDC || treeType == HuffmanTreeType.LumDC)) {
+                int amplitudeLength = huffmanLeafByte % 16;
+                /* Increment the counter to know how many values that have been decoded. */
+                count += huffmanLeafByte / 16 + 1;
+                
+                for (int i = BinaryData.Count - 1, j = 0; j < amplitudeLength; i--, j++) {
                     amplitude.Length++;
                     amplitude[j] = BinaryData[i];
                 }
+                BinaryData.Length -= amplitudeLength;
 
-                BinaryData.Length -= length;
-
+                /* In case this is a DC component with huffmanLeafByte 0x00, the amplitude is 0 */
                 if (amplitude.Count == 0) {
                     amplitude.Length += 1;
                     amplitude[0] = false;
                 }
-                count++;
 
-                if (isDC) {
+                if (treeType == HuffmanTreeType.ChromDC || treeType == HuffmanTreeType.LumDC) {
                     EntropyComponents.Add(new DCComponent(huffmanTreePath, huffmanLeafByte, amplitude));
                 } else {
                     EntropyComponents.Add(new ACComponent(huffmanTreePath, huffmanLeafByte, amplitude));
@@ -132,21 +131,22 @@ namespace JPEG_EntropyCoder {
         /// </summary>
         /// <param name="currentHuffmanTreePath">The path that found a leaf</param>
         /// <param name="huffmanLeafByte">The byte in the leaf</param>
-        /// <param name="table">The HuffmanTree to search in</param>
-        private void GetByteFromHuffmantree(out BitArray currentHuffmanTreePath, out byte huffmanLeafByte, HuffmanTable table) {
+        /// <param name="treeType">The HuffmanTree to search in</param>
+        private void GetByteFromHuffmantree(out BitArray currentHuffmanTreePath, out byte huffmanLeafByte, HuffmanTreeType treeType) {
             currentHuffmanTreePath = new BitArray(0);
             huffmanLeafByte = 0xFF;
 
             for (int i = 0, j = BinaryData.Count - 1; i < 16 && huffmanLeafByte == 0xFF; i++, j--) {
                 currentHuffmanTreePath.Length++;
                 currentHuffmanTreePath[i] = BinaryData[j];
-                huffmanLeafByte = HuffmanTrees[(int)table].Find(currentHuffmanTreePath);
+                huffmanLeafByte = HuffmanTrees[(int)treeType].Find(currentHuffmanTreePath);
             }
 
             if (huffmanLeafByte == 0xFF) {
-                throw new BinaryPathNotFoundInHuffmanTreeException($"The path {currentHuffmanTreePath} was not found in {table} HuffmanTree.");
+                throw new BinaryPathNotFoundInHuffmanTreeException($"The path {currentHuffmanTreePath} was not found in {treeType} HuffmanTree.");
             }
         }
+
         /// <summary>
         /// Encodes the list EntropyComponets to a BitArray.
         /// </summary>
@@ -157,7 +157,8 @@ namespace JPEG_EntropyCoder {
             BitArray bits = new BitArray(BitArrayLength);
 
             foreach (EntropyComponent entropyComponent in EntropyComponents) {
-                if ((entropyComponent is DCComponent && entropyComponent.HuffmanLeafByte == 0x00) || entropyComponent is EOBComponent || entropyComponent is ZeroFillComponent) {
+                if ((entropyComponent is DCComponent && entropyComponent.HuffmanLeafByte == 0x00) ||
+                           entropyComponent is EOBComponent || entropyComponent is ZeroFillComponent) {
                     foreach (bool b in entropyComponent.HuffmanTreePath) {
                         bits[currentIndex++] = b;
                     }

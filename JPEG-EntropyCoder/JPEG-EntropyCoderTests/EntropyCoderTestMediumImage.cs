@@ -41,11 +41,11 @@ namespace JPEG_EntropyCoderTests {
             for (int i = 0; i < 4; i++) {
                 List<byte> dht = new List<byte>();
                 int count = 0;
-                HuffmanTable huffmanTree;
+                HuffmanTreeType huffmanTree;
                 if (DHTFromFile[index] < 16) {
-                    huffmanTree = DHTFromFile[index] % 16 == 0 ? HuffmanTable.LumDC : HuffmanTable.ChromDC;
+                    huffmanTree = DHTFromFile[index] % 16 == 0 ? HuffmanTreeType.LumDC : HuffmanTreeType.ChromDC;
                 } else {
-                    huffmanTree = DHTFromFile[index] % 16 == 0 ? HuffmanTable.LumAC : HuffmanTable.ChromAC;
+                    huffmanTree = DHTFromFile[index] % 16 == 0 ? HuffmanTreeType.LumAC : HuffmanTreeType.ChromAC;
                 }
                 index++;
                 for (int j = 0; j < 16; index++, j++) {
