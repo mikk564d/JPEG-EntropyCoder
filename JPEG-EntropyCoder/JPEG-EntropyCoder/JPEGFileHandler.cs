@@ -49,7 +49,7 @@ namespace JPEG_EntropyCoder {
         /// Contains DQT bytes from the JPEG file.
         /// </summary>
         public byte[] DQT {
-            get { return Array.AsReadOnly(_DQT).ToArray(); }
+            get { return _DQT.Clone() as byte[]; }
             private set { _DQT = value; }
         }
 
@@ -57,7 +57,7 @@ namespace JPEG_EntropyCoder {
         /// Contains DHT bytes from the JPEG file.
         /// </summary>
         public byte[] DHT {
-            get { return Array.AsReadOnly(_DHT).ToArray(); }
+            get { return _DHT.Clone() as byte[]; }
             private set { _DHT = value; }
         }
 
@@ -65,7 +65,7 @@ namespace JPEG_EntropyCoder {
         /// Contains SOF bytes from the JPEG file.
         /// </summary>
         public byte[] SOF {
-            get { return Array.AsReadOnly(_SOF).ToArray(); }
+            get { return _SOF.Clone() as byte[]; }
             private set { _SOF = value; }
         }
 
@@ -73,7 +73,7 @@ namespace JPEG_EntropyCoder {
         /// Contains SOS bytes from the JPEG file.
         /// </summary>
         public byte[] SOS {
-            get { return Array.AsReadOnly(_SOS).ToArray(); }
+            get { return _SOS.Clone() as byte[]; }
             private set { _SOS = value; }
         }
 
@@ -81,7 +81,7 @@ namespace JPEG_EntropyCoder {
         /// Contains compressed image bytes from the JPEG file.
         /// </summary>
         public byte[] CompressedImage {
-            get { return Array.AsReadOnly(_compressedImage).ToArray(); }
+            get { return _compressedImage.Clone() as byte[]; }
             set {
                 Contract.Requires<ArgumentNullException>(value != null);
                 Contract.Requires<ArgumentException>(value.Length > 0);
@@ -126,7 +126,7 @@ namespace JPEG_EntropyCoder {
         /// Contains all bytes from the JPEG file.
         /// </summary>
         public byte[] All {
-            get { return Array.AsReadOnly(_all).ToArray(); }
+            get { return _all.Clone() as byte[]; }
             private set { _all = value; }
         }
 
