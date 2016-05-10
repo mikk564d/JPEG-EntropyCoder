@@ -87,11 +87,7 @@ namespace JPEG_EntropyCoder {
                 Contract.Requires<ArgumentException>(value.Length > 0);
 
                 UpdateAllWithCompressedImage(value);
-
-                /* Elvis operator is used because _compressedImage will be null first time property is set. */
-                if (_compressedImage?.Length != value.Length) {
-                    FillMarkerIndexes(markerIndexes, All);
-                }
+                FillMarkerIndexes(markerIndexes, All);
 
                 _compressedImage = value;
             }
