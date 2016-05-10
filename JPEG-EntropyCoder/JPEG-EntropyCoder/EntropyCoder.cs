@@ -19,6 +19,8 @@ namespace JPEG_EntropyCoder {
         private List<IHuffmanTree> HuffmanTrees { get; }
         private BitArray BinaryData { get; }
 
+        private int BitArrayLength { get; }
+
         /// <summary>
         /// Decodes the given JPEG binarydata.
         /// </summary>
@@ -34,6 +36,7 @@ namespace JPEG_EntropyCoder {
             HuffmanTrees = huffmanTrees;
             EntropyComponents = new List<EntropyComponent>();
             BinaryData = binaryData;
+            BitArrayLength = BinaryData.Count;
             DecodeBinaryData(luminensBlocks);
         }
 
@@ -151,29 +154,21 @@ namespace JPEG_EntropyCoder {
         public BitArray EncodeToBitArray() {
             int currentIndex = 0;
 
-            BitArray bits = new BitArray(0);
+            BitArray bits = new BitArray(BitArrayLength);
 
             foreach (EntropyComponent entropyComponent in EntropyComponents) {
                 if ((entropyComponent is DCComponent && entropyComponent.HuffmanLeafByte == 0x00) || entropyComponent is EOBComponent || entropyComponent is ZeroFillComponent) {
                     foreach (bool b in entropyComponent.HuffmanTreePath) {
-                        bits.Length++;
                         bits[currentIndex++] = b;
                     }
                 } else {
                     foreach (bool b in entropyComponent.HuffmanTreePath) {
-                        bits.Length++;
                         bits[currentIndex++] = b;
                     }
                     foreach (bool b in ((EntropyValueComponent)entropyComponent).Amplitude) {
-                        bits.Length++;
                         bits[currentIndex++] = b;
                     }
                 }
-            }
-
-            while (bits.Count % 8 != 0) {
-                bits.Length++;
-                bits[currentIndex++] = true;
             }
 
             return bits;
