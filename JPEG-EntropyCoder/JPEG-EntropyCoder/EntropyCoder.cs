@@ -48,19 +48,19 @@ namespace JPEG_EntropyCoder {
         /// <param name="luminansSubsamling">Amount of luminans blocks per MCU</param>  
         private void DecodeBinaryData(int luminansSubsamling) {
             int chrominansSubsampling = 2;
-            int progressThreshold = BitArrayLength / 100;
-            int currentProgress = progressThreshold;
+            //float progressThreshold = 1;
+            int currentProgress = 0;
 
 
             while (BinaryData.Count >= 8) {
                 DecodeBlock(luminansSubsamling, HuffmanTreeType.Luminance);
                 DecodeBlock(chrominansSubsampling, HuffmanTreeType.Chrominance);
 
-                if (BitArrayLength - BinaryData.Count > currentProgress) {
+                if ((int)((float)(BitArrayLength - BinaryData.Count) / (float)BitArrayLength * 100f) > currentProgress) {
+                    currentProgress = (int)((float)(BitArrayLength - BinaryData.Count) / (float)BitArrayLength * 100f);
                     if (Progress != null) {
-                        Progress(this, new ProgressEventArgs(currentProgress / progressThreshold));
+                        Progress(this, new ProgressEventArgs(currentProgress));
                     }
-                    currentProgress += progressThreshold;
                 }
             }
         }
@@ -168,8 +168,8 @@ namespace JPEG_EntropyCoder {
 
             BitArray bits = new BitArray(BitArrayLength);
 
-            int progressThreshold = BitArrayLength / 100;
-            int currentProgress = progressThreshold;
+            //int progressThreshold = 1;
+            int currentProgress = 0;
 
 
             foreach (EntropyComponent entropyComponent in EntropyComponents) {
@@ -186,13 +186,13 @@ namespace JPEG_EntropyCoder {
                         bits[currentIndex++] = b;
                     }
                 }
-                
 
-                if (currentIndex > currentProgress) {
+
+                if ((int)((float)currentIndex / (float)BitArrayLength * 100f) > currentProgress) {
+                    currentProgress = (int)((float)currentIndex / (float)BitArrayLength * 100f);
                     if (Progress != null) {
-                        Progress(this, new ProgressEventArgs(currentProgress / progressThreshold));
+                        Progress(this, new ProgressEventArgs((int)currentProgress));
                     }
-                    currentProgress += progressThreshold;
                 }
             }
 
