@@ -203,7 +203,9 @@ namespace JPEG_EntropyCoder {
                 List<uint> SOSIndexesList = dictionary[SOS_MARKER];
                 List<uint> EOIIndexesList = dictionary[EOI_MARKER];
 
-                int shortestListLength = Math.Min(SOSIndexesList.Count, EOIIndexesList.Count);
+                int[] indexesListsLengths = {SOIIndexesList.Count, SOSIndexesList.Count, EOIIndexesList.Count};
+
+                int shortestListLength = indexesListsLengths.Min();
 
                 List<uint> SOSToEOILengths = new List<uint>(shortestListLength);
 
