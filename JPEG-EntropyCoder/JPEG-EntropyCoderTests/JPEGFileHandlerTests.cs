@@ -52,7 +52,7 @@ namespace JPEG_EntropyCoderTests {
         }
 
         [Test]
-        /* This test also tests the private FindMarkerIndexes method. */
+        /* This test also tests the private FillMarkerIndexes method. */
         public void CompressedImage_Set_All_Changed_Accordingly() {
             fileHandler.CompressedImage = setBytes;
             byte[] allActualBytes = fileHandler.All;
