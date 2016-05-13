@@ -109,6 +109,7 @@
     <Compile Include="Interfaces\IJPEGFileHandler.cs" />
     <Compile Include="JPEGEntropyCoder.cs" />
     <Compile Include="JPEGFileHandler.cs" />
+    <Compile Include="ProgressEventArgs.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

@@ -8,10 +8,12 @@ using JPEG_EntropyCoder.Interfaces;
 using Utilities;
 
 namespace JPEG_EntropyCoder {
+    public delegate void ProgressEvent(object sender, ProgressEventArgs e);
     /// <summary>
     /// Uses HuffmanTrees to code the given JPEG binarydata.
     /// </summary>
     public class EntropyCoder : IEntropyCoder {
+        public static event ProgressEvent Progress;
         /// <summary>
         /// List with EntropyComponets.
         /// </summary>
@@ -46,10 +48,20 @@ namespace JPEG_EntropyCoder {
         /// <param name="luminansSubsamling">Amount of luminans blocks per MCU</param>  
         private void DecodeBinaryData(int luminansSubsamling) {
             int chrominansSubsampling = 2;
+            int progressThreshold = BitArrayLength / 100;
+            int currentProgress = progressThreshold;
+
 
             while (BinaryData.Count >= 8) {
                 DecodeBlock(luminansSubsamling, HuffmanTreeType.Luminance);
                 DecodeBlock(chrominansSubsampling, HuffmanTreeType.Chrominance);
+
+                if (BitArrayLength - BinaryData.Count > currentProgress) {
+                    if (Progress != null) {
+                        Progress(this, new ProgressEventArgs(currentProgress / progressThreshold));
+                    }
+                    currentProgress += progressThreshold;
+                }
             }
         }
 
@@ -156,6 +168,10 @@ namespace JPEG_EntropyCoder {
 
             BitArray bits = new BitArray(BitArrayLength);
 
+            int progressThreshold = BitArrayLength / 100;
+            int currentProgress = progressThreshold;
+
+
             foreach (EntropyComponent entropyComponent in EntropyComponents) {
                 if ((entropyComponent is DCComponent && entropyComponent.HuffmanLeafByte == 0x00) ||
                            entropyComponent is EOBComponent || entropyComponent is ZeroFillComponent) {
@@ -169,6 +185,14 @@ namespace JPEG_EntropyCoder {
                     foreach (bool b in ((EntropyValueComponent)entropyComponent).Amplitude) {
                         bits[currentIndex++] = b;
                     }
+                }
+                
+
+                if (currentIndex > currentProgress) {
+                    if (Progress != null) {
+                        Progress(this, new ProgressEventArgs(currentProgress / progressThreshold));
+                    }
+                    currentProgress += progressThreshold;
                 }
             }
 

@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using JPEG_EntropyCoder.Components;
 
@@ -20,6 +21,6 @@ namespace JPEG_EntropyCoder.Interfaces {
         /// Encodes EntropyComponents to a byte[].
         /// </summary>
         /// <returns>byte[]</returns>
-        byte[] EncodeToByteArray();
+        byte[] EncodeToByteArray();     
     }
 }
