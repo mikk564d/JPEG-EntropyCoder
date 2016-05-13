@@ -198,9 +198,25 @@ namespace JPEG_EntropyCoder {
             /* Initialize to unreachable values so evaluation in GetFieldBytes always evaluates to true when there is no thumbnail. */
             uint[] thumbnailIndexes = { Convert.ToUInt32(bytes.Length), Convert.ToUInt32(bytes.Length) };
 
-            if (dictionary[SOI_MARKER].Count > 1) {
-                thumbnailIndexes[0] = dictionary[SOI_MARKER][1]; // Second SOI marker
-                thumbnailIndexes[1] = dictionary[EOI_MARKER][0]; // First EOI marker
+            if (dictionary[SOI_MARKER].Count > 1 && dictionary[SOS_MARKER].Count > 1 && dictionary[EOI_MARKER].Count > 1) {
+                List<uint> SOIIndexesList = dictionary[SOI_MARKER];
+                List<uint> SOSIndexesList = dictionary[SOS_MARKER];
+                List<uint> EOIIndexesList = dictionary[EOI_MARKER];
+
+                int shortestListLength = Math.Min(SOSIndexesList.Count, EOIIndexesList.Count);
+
+                List<uint> SOSToEOILengths = new List<uint>(shortestListLength);
+
+                for (int i = 0; i < shortestListLength; i++) {
+                    SOSToEOILengths.Add(EOIIndexesList[i] - SOSIndexesList[i]);
+                }
+
+                int listIndexOfLargestLength = SOSToEOILengths.IndexOf(SOSToEOILengths.Max());
+
+                /* Use second SOI marker because it is the first thumbnail SOI marker.
+                 * And use last EOI marker before image data. */
+                thumbnailIndexes[0] = SOIIndexesList[1];
+                thumbnailIndexes[1] = EOIIndexesList[listIndexOfLargestLength - 1];
             }
 
             return thumbnailIndexes;
