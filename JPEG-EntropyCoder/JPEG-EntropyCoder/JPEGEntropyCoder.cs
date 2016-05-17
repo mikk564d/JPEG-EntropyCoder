@@ -33,8 +33,8 @@ namespace JPEG_EntropyCoder {
 
             byte[] compressedImageWithoutEscapeBytes = RemoveEscapeBytes(FileHandler.CompressedImage);
             BitArray compressedImage = new BitArray(compressedImageWithoutEscapeBytes);
-            compressedImage = BitArrayUtilities.ChangeEndianOnBitArray(compressedImage);
-            compressedImage = BitArrayUtilities.ReverseBitArray(compressedImage);
+            BitArrayUtilities.ChangeEndianOnBitArray(compressedImage);
+            BitArrayUtilities.ReverseBitArray(compressedImage);
 
             int numberOfLuminanceBlocks = GetNumberOfLuminanceBlocksPerMCU(FileHandler.SOF);
 

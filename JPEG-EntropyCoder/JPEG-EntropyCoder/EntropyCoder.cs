@@ -190,9 +190,7 @@ namespace JPEG_EntropyCoder {
 
                 if ((int)((float)currentIndex / (float)BitArrayLength * 100f) > currentProgress) {
                     currentProgress = (int)((float)currentIndex / (float)BitArrayLength * 100f);
-                    if (Progress != null) {
-                        Progress(this, new ProgressEventArgs((int)currentProgress));
-                    }
+                    Progress?.Invoke(this, new ProgressEventArgs((int)currentProgress));
                 }
             }
 
@@ -208,7 +206,7 @@ namespace JPEG_EntropyCoder {
 
             byte[] bytesBeforeBitstuff = new byte[bits.Count / 8];
 
-            bits = BitArrayUtilities.ChangeEndianOnBitArray(bits);
+            BitArrayUtilities.ChangeEndianOnBitArray(bits);
 
             bits.CopyTo(bytesBeforeBitstuff, 0);
 
