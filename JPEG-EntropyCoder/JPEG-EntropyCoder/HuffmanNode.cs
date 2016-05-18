@@ -13,7 +13,7 @@ namespace JPEG_EntropyCoder {
         private static LinkedList<LinkedList<byte>> DHTLists; //Contains the values for each level of the tree
 
         private byte Value { get; set; }
-        private BitArray Address { get; set; }
+        private SimpleBitVector16 Address { get; set; }
         private int Level { get; set; }
         private bool Leaf { get; set; }
 
@@ -25,7 +25,7 @@ namespace JPEG_EntropyCoder {
         /// </summary>
         /// <param name="binaddr">Should contain the expected address of this node. Should be empty if DHT is not null.</param>
         /// <param name="DHT">An array representation of a DHT as it appears in a JPEG file.</param>
-        public HuffmanNode(BitArray binaddr, byte[] DHT = null) {
+        public HuffmanNode(SimpleBitVector16 binaddr, byte[] DHT = null) {
             Contract.Requires<ArgumentException>(DHT == null || (DHT != null && (binaddr == null || binaddr.Length == 0)));
 
             if (DHT != null) {
@@ -33,17 +33,17 @@ namespace JPEG_EntropyCoder {
             }
 
             Level = binaddr.Length;
-            Address = (BitArray)binaddr.Clone();
+            Address = (SimpleBitVector16)binaddr.Clone();
 
             MakeMeLeaf();
 
             if (!Leaf && Level < 16) {
-                BitArray nextBinAdr = (BitArray)binaddr.Clone();
+                SimpleBitVector16 nextBinAdr = (SimpleBitVector16)binaddr.Clone();
 
                 nextBinAdr.Length += 1;
-                nextBinAdr[nextBinAdr.Length - 1] = false;
+                nextBinAdr[(byte) (nextBinAdr.Length - 1)] = false;
                 LeftNode = new HuffmanNode(nextBinAdr);
-                nextBinAdr[nextBinAdr.Length - 1] = true;
+                nextBinAdr[(byte) (nextBinAdr.Length - 1)] = true;
                 RightNode = new HuffmanNode(nextBinAdr);
             }
         }
@@ -90,10 +90,10 @@ namespace JPEG_EntropyCoder {
         /// </summary>
         /// <param name="binAddr">The address to search for. Can be incomplete.</param>
         /// <returns>If a matching leaf is found it's value is returned. If no leaf is found, 0XFF is returned.</returns>
-        public byte SearchFor(BitArray binAddr) {
+        public byte SearchFor(SimpleBitVector16 binAddr) {
             Contract.Requires<ArgumentNullException>(binAddr != null);
             if (Leaf) {
-                if (BitArrayUtilities.CompareBitArray(Address, binAddr)) {
+                if (Address.Equals(binAddr)) {
                     return Value;
                 } else {
                     return 0xFF;
@@ -104,7 +104,7 @@ namespace JPEG_EntropyCoder {
                 if (binAddr.Length <= Level) {
                     // TODO describe 0xFF
                     result = 0xFF;
-                } else if (binAddr[Level] == false) { // Go left 
+                } else if (binAddr[(byte) Level] == false) { // Go left 
                     result = LeftNode.SearchFor(binAddr);
                 } else {
                     result = RightNode.SearchFor(binAddr);
@@ -122,8 +122,8 @@ namespace JPEG_EntropyCoder {
             Contract.Requires<ArgumentNullException>(result != null);
             if (Leaf) {
                 string addressStr = "";
-                foreach (bool b in Address) {
-                    addressStr += b ? "1" : "0";
+                for (byte i = 0; i < Address.Length; i++) {
+                    addressStr += Address[i] ? "1" : "0";
                 }
 
                 result.Add($"{addressStr} - {Value}");

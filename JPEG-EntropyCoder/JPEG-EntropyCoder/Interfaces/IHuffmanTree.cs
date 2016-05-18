@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 namespace JPEG_EntropyCoder.Interfaces {
     public interface IHuffmanTree {
         byte[] DHT { get; }
-        byte Find(BitArray treePath);
+        byte Find(SimpleBitVector16 treePath);
         List<string> PrintTree();
     }
 }
