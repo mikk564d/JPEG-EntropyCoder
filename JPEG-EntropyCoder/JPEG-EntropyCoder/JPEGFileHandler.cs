@@ -109,13 +109,13 @@ namespace JPEG_EntropyCoder {
 
             uint lengthOfField = GetFieldLength(markerIndexes, SOS_MARKER, SOSIndexesList.Count - 1, all);
 
-            byte[] bytes = all.Take(Convert.ToInt32(SOSIndex + MARKER_LENGTH + LENGTH_OF_FIELD_LENGTH + lengthOfField)).ToArray();
+            IEnumerable<byte> bytes = all.Take(Convert.ToInt32(SOSIndex + MARKER_LENGTH + LENGTH_OF_FIELD_LENGTH + lengthOfField));
 
-            bytes = bytes.Concat(compressedImage).ToArray();
+            bytes = bytes.Concat(compressedImage);
 
-            bytes = bytes.Concat(all.Skip(Convert.ToInt32(EOIIndex))).ToArray();
+            bytes = bytes.Concat(all.Skip(Convert.ToInt32(EOIIndex)));
 
-            All = bytes;
+            All = bytes.ToArray();
         }
 
         /// <summary>
