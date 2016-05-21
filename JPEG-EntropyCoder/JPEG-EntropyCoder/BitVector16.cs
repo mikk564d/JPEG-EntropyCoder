@@ -1,19 +1,19 @@
 ﻿using System;
 
 namespace JPEG_EntropyCoder {
-    public class SimpleBitVector16 : ICloneable{
-        private short _data;
+    public class BitVector16 : ICloneable{
+        private short Data { get; set; }
         public byte Length { get; set; }
 
-        public SimpleBitVector16() : this(0, 0)
+        public BitVector16() : this(0, 0)
         { }
 
-        public SimpleBitVector16(short data, byte length) {
-            _data = data;
+        public BitVector16(short data, byte length) {
+            Data = data;
             Length = length;
         }
 
-        public SimpleBitVector16(bool[] data) {
+        public BitVector16(bool[] data) {
             byte i;
             for (i = 0; i < data.Length && i < 16; i++) {
                 Set(i, data[i]);
@@ -32,36 +32,36 @@ namespace JPEG_EntropyCoder {
         }
 
         public bool Get(byte index) {
-            return (_data & (1 << index)) != 0;
+            return (Data & (1 << index)) != 0;
         }
 
         public void Set(byte index, bool value) {
             if (value) {
-                _data |= (short)(1 << index);
+                Data |= (short)(1 << index);
             } else {
-                _data &= (short)~(1 << index);
+                Data &= (short)~(1 << index);
             }
         }
 
-        protected bool Equals(SimpleBitVector16 other) {
-            return _data == other._data && Length == other.Length;
+        protected bool Equals(BitVector16 other) {
+            return Data == other.Data && Length == other.Length;
         }
 
         public override bool Equals(object obj) {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
             if (obj.GetType() != this.GetType()) return false;
-            return Equals((SimpleBitVector16) obj);
+            return Equals((BitVector16) obj);
         }
 
         public override int GetHashCode() {
             unchecked {
-                return (_data.GetHashCode()*397) ^ Length.GetHashCode();
+                return (Data.GetHashCode()*397) ^ Length.GetHashCode();
             }
         }
 
         public object Clone() {
-            return new SimpleBitVector16(_data, Length);
+            return new BitVector16(Data, Length);
         }
     }
 }
