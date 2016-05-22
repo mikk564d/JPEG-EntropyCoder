@@ -14,12 +14,14 @@ namespace JPEG_EntropyCoder.Interfaces {
         /// The DHT used in construction of the contained tree.
         /// </summary>
         byte[] DHT { get; }
+
         /// <summary>
         /// Attempts to find a leaf at the supplied path.
         /// </summary>
         /// <param name="treePath">Only the first 16 bits will be used for leaf address lookup.</param>
         /// <returns>The <see cref="byte"/> that is found at the <paramref name="treePath"/>.</returns>
         byte Find(BitVector16 treePath);
+
         /// <summary>
         /// Build a print friendly version of the leaves in the tree.
         /// </summary>

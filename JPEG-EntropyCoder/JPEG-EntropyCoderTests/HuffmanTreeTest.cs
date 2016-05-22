@@ -53,7 +53,6 @@ namespace JPEG_EntropyCoderTests {
                 for (int i = 0; i < chars.Length - 1; i++) {
                   yield return new Tuple<byte, BitVector16>(0xFF, charsToBitVector(chars.Take(i).ToArray()));
                 }
-
                 yield return new Tuple<byte, BitVector16>(byte.Parse(addrc[0],System.Globalization.NumberStyles.HexNumber), charsToBitVector(chars));
             }
         }

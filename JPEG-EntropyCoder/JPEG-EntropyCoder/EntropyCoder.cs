@@ -8,12 +8,24 @@ using JPEG_EntropyCoder.Interfaces;
 using Utilities;
 
 namespace JPEG_EntropyCoder {
+
+    /// <summary>
+    /// Triggers when progress have been made.
+    /// </summary>
+    /// <param name="sender">Object which triggered the event</param>
+    /// <param name="e">ProgressEventArgs which contains information about the progress</param>
     public delegate void ProgressEvent(object sender, ProgressEventArgs e);
+
     /// <summary>
     /// Uses HuffmanTrees to code the given JPEG binarydata.
     /// </summary>
     public class EntropyCoder : IEntropyCoder {
+
+        /// <summary>
+        /// Event that notifies when progress have been made.
+        /// </summary>
         public static event ProgressEvent Progress;
+
         /// <summary>
         /// List with EntropyComponets.
         /// </summary>
