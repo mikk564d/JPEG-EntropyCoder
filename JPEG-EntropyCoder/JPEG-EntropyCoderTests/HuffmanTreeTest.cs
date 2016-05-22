@@ -17,7 +17,7 @@ namespace JPEG_EntropyCoderTests {
             this.tree = new HuffmanTree(testDHT);
         }
 
-        public static BitVector16 charsToBitArray(char[] input) {
+        public static BitVector16 charsToBitVector(char[] input) {
             bool[] result = new bool[input.Length];
 
             for (int i = 0; i < input.Length; i++) {
@@ -51,10 +51,9 @@ namespace JPEG_EntropyCoderTests {
                 string[] addrc = addr.Split('_');
                 char[] chars = addrc[1].ToCharArray();
                 for (int i = 0; i < chars.Length - 1; i++) {
-                  yield return new Tuple<byte, BitVector16>(0xFF, charsToBitArray(chars.Take(i).ToArray()));
+                  yield return new Tuple<byte, BitVector16>(0xFF, charsToBitVector(chars.Take(i).ToArray()));
                 }
-
-                yield return new Tuple<byte, BitVector16>(byte.Parse(addrc[0],System.Globalization.NumberStyles.HexNumber), charsToBitArray(chars));
+                yield return new Tuple<byte, BitVector16>(byte.Parse(addrc[0],System.Globalization.NumberStyles.HexNumber), charsToBitVector(chars));
             }
         }
 
