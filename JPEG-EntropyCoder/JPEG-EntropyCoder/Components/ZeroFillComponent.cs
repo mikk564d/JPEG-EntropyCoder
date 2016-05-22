@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace JPEG_EntropyCoder.Components {
     class ZeroFillComponent : EntropyComponent {
-        public ZeroFillComponent(SimpleBitVector16 huffmanTreePath, byte huffmanLeafHexValue) 
+        public ZeroFillComponent(BitVector16 huffmanTreePath, byte huffmanLeafHexValue) 
             : base(huffmanTreePath, huffmanLeafHexValue) {
         }
     }

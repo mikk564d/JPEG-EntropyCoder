@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace JPEG_EntropyCoder.Components {
     public class EOBComponent : EntropyComponent {
-        public EOBComponent(SimpleBitVector16 huffmanTreePath, byte huffmanLeafHexValue)
+        public EOBComponent(BitVector16 huffmanTreePath, byte huffmanLeafHexValue)
             : base(huffmanTreePath, huffmanLeafHexValue) { }
     }
 }

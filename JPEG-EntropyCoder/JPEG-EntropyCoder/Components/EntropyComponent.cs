@@ -5,10 +5,10 @@ using Utilities;
 
 namespace JPEG_EntropyCoder.Components {
      public abstract class EntropyComponent {
-        public SimpleBitVector16 HuffmanTreePath { get; }
+        public BitVector16 HuffmanTreePath { get; }
         public byte HuffmanLeafByte { get; }
 
-        protected EntropyComponent(SimpleBitVector16 huffmanTreePath, byte huffmanLeafHexValue) {
+        protected EntropyComponent(BitVector16 huffmanTreePath, byte huffmanLeafHexValue) {
             HuffmanTreePath = huffmanTreePath;
             HuffmanLeafByte = huffmanLeafHexValue;
         }

@@ -5,14 +5,14 @@ using JPEG_EntropyCoder;
 namespace JPEG_EntropyCoderTests
 {
     [TestFixture]
-    public class SimpleBitVector16Tests
+    public class BitVector16Tests
     {
         [Test]
-        public void SimpleBitVector16Constructor_SimpleValue_BuildCorrect()
+        public void BitVector16Constructor_SimpleValue_BuildCorrect()
         {
             bool[] arr = {false, true, false, false, false, true, true, true};
 
-            SimpleBitVector16 v = new SimpleBitVector16(arr);
+            BitVector16 v = new BitVector16(arr);
             bool[] resultArray = new bool[8];
 
             for (byte i = 0; i < v.Length; i++)
@@ -24,52 +24,52 @@ namespace JPEG_EntropyCoderTests
         }
 
         [Test]
-        public void SimpleBitVector16Get_TrueValue_Fetched()
+        public void BitVector16Get_TrueValue_Fetched()
         {
             bool[] arr = { false, true, false, false, false, true, true, true };
 
-            SimpleBitVector16 v = new SimpleBitVector16(arr);
+            BitVector16 v = new BitVector16(arr);
             
             Assert.AreEqual(true, v[1]);
         }
 
         [Test]
-        public void SimpleBitVector16Get_FalseValue_Fetched()
+        public void BitVector16Get_FalseValue_Fetched()
         {
             bool[] arr = { false, true, false, false, false, true, true, true };
 
-            SimpleBitVector16 v = new SimpleBitVector16(arr);
+            BitVector16 v = new BitVector16(arr);
 
             Assert.AreEqual(false, v[2]);
         }
 
         [Test]
-        public void SimpleBitVector16Get_FalseOnlyValue_Fetched()
+        public void BitVector16Get_FalseOnlyValue_Fetched()
         {
             bool[] arr = { true, true, false, true, true, true, true, true };
 
-            SimpleBitVector16 v = new SimpleBitVector16(arr);
+            BitVector16 v = new BitVector16(arr);
 
             Assert.AreEqual(false, v[2]);
         }
 
         [Test]
-        public void SimpleBitVector16Set_FalseValue_Set()
+        public void BitVector16Set_FalseValue_Set()
         {
             bool[] arr = { false, true, false, false, false, true, true, true };
 
-            SimpleBitVector16 v = new SimpleBitVector16(arr);
+            BitVector16 v = new BitVector16(arr);
             v[1] = false;
 
             Assert.AreEqual(false, v[1]);
         }
 
         [Test]
-        public void SimpleBitVector16Set_TrueValue_Set()
+        public void BitVector16Set_TrueValue_Set()
         {
             bool[] arr = { false, true, false, false, false, true, true, true };
 
-            SimpleBitVector16 v = new SimpleBitVector16(arr);
+            BitVector16 v = new BitVector16(arr);
             v[2] = true;
 
             Assert.AreEqual(true, v[2]);

@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace JPEG_EntropyCoder.Components {
     public class ACComponent : EntropyValueComponent {
-        public ACComponent(SimpleBitVector16 huffmanTreePath, byte huffmanLeafHexValue, SimpleBitVector16 amplitude) 
+        public ACComponent(BitVector16 huffmanTreePath, byte huffmanLeafHexValue, BitVector16 amplitude) 
             : base(huffmanTreePath, huffmanLeafHexValue, amplitude) { }
     }
 }

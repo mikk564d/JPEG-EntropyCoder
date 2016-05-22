@@ -100,8 +100,8 @@ namespace JPEG_EntropyCoder {
         /// <returns>Returns true if EOBComponent was created.</returns>
         private bool DecodeComponent(HuffmanTreeType treeType, ref int count) {
             byte huffmanLeafByte;
-            SimpleBitVector16 amplitude = new SimpleBitVector16();
-            SimpleBitVector16 huffmanTreePath;
+            BitVector16 amplitude = new BitVector16();
+            BitVector16 huffmanTreePath;
 
             GetByteFromHuffmantree(out huffmanTreePath, out huffmanLeafByte, treeType);
             BinaryData.Length -= huffmanTreePath.Length;
@@ -144,8 +144,8 @@ namespace JPEG_EntropyCoder {
         /// <param name="currentHuffmanTreePath">The path that found a leaf</param>
         /// <param name="huffmanLeafByte">The byte in the leaf</param>
         /// <param name="treeType">The HuffmanTree to search in</param>
-        private void GetByteFromHuffmantree(out SimpleBitVector16 currentHuffmanTreePath, out byte huffmanLeafByte, HuffmanTreeType treeType) {
-            currentHuffmanTreePath = new SimpleBitVector16();
+        private void GetByteFromHuffmantree(out BitVector16 currentHuffmanTreePath, out byte huffmanLeafByte, HuffmanTreeType treeType) {
+            currentHuffmanTreePath = new BitVector16();
             huffmanLeafByte = 0xFF;
 
             for (int i = 0, j = BinaryData.Count - 1; i < 16 && huffmanLeafByte == 0xFF; i++, j--) {

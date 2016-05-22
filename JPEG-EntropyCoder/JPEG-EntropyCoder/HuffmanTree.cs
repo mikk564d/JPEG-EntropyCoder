@@ -14,6 +14,9 @@ namespace JPEG_EntropyCoder {
         /// The DHT used in construction of the contained tree.
         /// </summary>
         public byte[] DHT { get; }
+        /// <summary>
+        /// The root of the Huffman tree.
+        /// </summary>
         private HuffmanNode Root { get; }
 
         /// <summary>
@@ -25,15 +28,15 @@ namespace JPEG_EntropyCoder {
             Contract.Requires<ArgumentNullException>(DHT != null);
             Contract.Requires<ArgumentException>(DHT.Length > 0);
             this.DHT = DHT;
-            Root = new HuffmanNode(new SimpleBitVector16(), DHT);
+            Root = new HuffmanNode(new BitVector16(), DHT);
         }
 
         /// <summary>
         /// Attempts to find a leaf at the supplied path.
         /// </summary>
         /// <param name="treePath">Only the first 16 bits will be used for leaf address lookup.</param>
-        /// <returns></returns>
-        public byte Find(SimpleBitVector16 treePath) {
+        /// <returns>The <see cref="byte"/> that is found at the <paramref name="treePath"/>.</returns>
+        public byte Find(BitVector16 treePath) {
             Contract.Requires<ArgumentNullException>(treePath != null);
             
             return Root.SearchFor(treePath);

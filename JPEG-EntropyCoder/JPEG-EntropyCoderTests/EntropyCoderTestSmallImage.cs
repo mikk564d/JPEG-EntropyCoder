@@ -33,19 +33,19 @@ namespace JPEG_EntropyCoderTests {
         [Test]
         public void EntropyCoderConstructor_SimpleValuesSmallPicture_BuildCorrect() {
             List<EntropyComponent> expectedComponents = new List<EntropyComponent>();
-            expectedComponents.Add(new DCComponent(new SimpleBitVector16(new bool[] { false }), 0x08, new SimpleBitVector16(new bool[] { false, true, false, true, false, true, false, false })));
-            expectedComponents.Add(new EOBComponent(new SimpleBitVector16(new []{false}), 0x00));
-            expectedComponents.Add(new DCComponent(new SimpleBitVector16(new[] { false }), 0x00, new SimpleBitVector16(new []{false})));
-            expectedComponents.Add(new EOBComponent(new SimpleBitVector16(new[] { false }), 0x00));
-            expectedComponents.Add(new DCComponent(new SimpleBitVector16(new[] { false }), 0x00, new SimpleBitVector16(new[] { false })));
-            expectedComponents.Add(new EOBComponent(new SimpleBitVector16(new[] { false }), 0x00));
+            expectedComponents.Add(new DCComponent(new BitVector16(new bool[] { false }), 0x08, new BitVector16(new bool[] { false, true, false, true, false, true, false, false })));
+            expectedComponents.Add(new EOBComponent(new BitVector16(new []{false}), 0x00));
+            expectedComponents.Add(new DCComponent(new BitVector16(new[] { false }), 0x00, new BitVector16(new []{false})));
+            expectedComponents.Add(new EOBComponent(new BitVector16(new[] { false }), 0x00));
+            expectedComponents.Add(new DCComponent(new BitVector16(new[] { false }), 0x00, new BitVector16(new[] { false })));
+            expectedComponents.Add(new EOBComponent(new BitVector16(new[] { false }), 0x00));
 
-            expectedComponents.Add(new DCComponent(new SimpleBitVector16(new bool[] { true, false }), 0x09, new SimpleBitVector16(new bool[] { true, false, true, false, true, false, true, false, false })));
-            expectedComponents.Add(new EOBComponent(new SimpleBitVector16(new[] { false }), 0x00));
-            expectedComponents.Add(new DCComponent(new SimpleBitVector16(new[] { false }), 0x00, new SimpleBitVector16(new[] { false })));
-            expectedComponents.Add(new EOBComponent(new SimpleBitVector16(new[] { false }), 0x00));
-            expectedComponents.Add(new DCComponent(new SimpleBitVector16(new[] { false }), 0x00, new SimpleBitVector16(new[] { false })));
-            expectedComponents.Add(new EOBComponent(new SimpleBitVector16(new[] { false }), 0x00));
+            expectedComponents.Add(new DCComponent(new BitVector16(new bool[] { true, false }), 0x09, new BitVector16(new bool[] { true, false, true, false, true, false, true, false, false })));
+            expectedComponents.Add(new EOBComponent(new BitVector16(new[] { false }), 0x00));
+            expectedComponents.Add(new DCComponent(new BitVector16(new[] { false }), 0x00, new BitVector16(new[] { false })));
+            expectedComponents.Add(new EOBComponent(new BitVector16(new[] { false }), 0x00));
+            expectedComponents.Add(new DCComponent(new BitVector16(new[] { false }), 0x00, new BitVector16(new[] { false })));
+            expectedComponents.Add(new EOBComponent(new BitVector16(new[] { false }), 0x00));
 
             Assert.IsTrue(Coder.EntropyComponents.SequenceEqual(expectedComponents));
         }

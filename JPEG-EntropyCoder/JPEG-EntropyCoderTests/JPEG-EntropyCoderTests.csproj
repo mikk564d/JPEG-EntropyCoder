@@ -99,9 +99,6 @@
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="JPEG-EntropyCoder">
-      <HintPath>..\JPEG-EntropyCoder\bin\Debug\JPEG-EntropyCoder.dll</HintPath>
-    </Reference>
     <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <Private>False</Private>
     </Reference>
@@ -132,12 +129,16 @@
     <Compile Include="JPEGImageSingleMarkerNoThumbnail.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="JPEGImageMultipleMarkers.cs" />
-    <Compile Include="SimpleBitVector16Tests.cs" />
+    <Compile Include="BitVector16Tests.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\JPEG-EntropyCoder\JPEG-EntropyCoder.csproj">
+      <Project>{24f4ffca-d7c3-43a1-9fa0-6b058899a4e7}</Project>
+      <Name>JPEG-EntropyCoder</Name>
+    </ProjectReference>
     <ProjectReference Include="..\JPEG-EntropyCoder\JPEG-EntropyCoder.csproj">
       <Project>{24f4ffca-d7c3-43a1-9fa0-6b058899a4e7}</Project>
       <Name>JPEG-EntropyCoder</Name>
