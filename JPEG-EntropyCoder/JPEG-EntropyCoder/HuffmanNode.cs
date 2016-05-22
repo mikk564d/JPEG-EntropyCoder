@@ -13,7 +13,7 @@ namespace JPEG_EntropyCoder {
         private static LinkedList<LinkedList<byte>> DHTLists; //Contains the values for each level of the tree
 
         private byte Value { get; set; }
-        private SimpleBitVector16 Address { get; set; }
+        private BitVector16 Address { get; set; }
         private int Level { get; set; }
         private bool Leaf { get; set; }
 
@@ -25,7 +25,7 @@ namespace JPEG_EntropyCoder {
         /// </summary>
         /// <param name="binaddr">Should contain the expected address of this node. Should be empty if DHT is not null.</param>
         /// <param name="DHT">An array representation of a DHT as it appears in a JPEG file.</param>
-        public HuffmanNode(SimpleBitVector16 binaddr, byte[] DHT = null) {
+        public HuffmanNode(BitVector16 binaddr, byte[] DHT = null) {
             Contract.Requires<ArgumentException>(DHT == null || (DHT != null && (binaddr == null || binaddr.Length == 0)));
 
             if (DHT != null) {
@@ -33,12 +33,12 @@ namespace JPEG_EntropyCoder {
             }
 
             Level = binaddr.Length;
-            Address = (SimpleBitVector16)binaddr.Clone();
+            Address = (BitVector16)binaddr.Clone();
 
             MakeMeLeaf();
 
             if (!Leaf && Level < 16) {
-                SimpleBitVector16 nextBinAdr = (SimpleBitVector16)binaddr.Clone();
+                BitVector16 nextBinAdr = (BitVector16)binaddr.Clone();
 
                 nextBinAdr.Length += 1;
                 nextBinAdr[(byte) (nextBinAdr.Length - 1)] = false;
@@ -90,7 +90,7 @@ namespace JPEG_EntropyCoder {
         /// </summary>
         /// <param name="binAddr">The address to search for. Can be incomplete.</param>
         /// <returns>If a matching leaf is found it's value is returned. If no leaf is found, 0XFF is returned.</returns>
-        public byte SearchFor(SimpleBitVector16 binAddr) {
+        public byte SearchFor(BitVector16 binAddr) {
             Contract.Requires<ArgumentNullException>(binAddr != null);
             if (Leaf) {
                 if (Address.Equals(binAddr)) {

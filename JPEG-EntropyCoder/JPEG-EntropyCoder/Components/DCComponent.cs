@@ -6,8 +6,20 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace JPEG_EntropyCoder.Components {
+
+    /// <summary>
+    /// EntropyComponent is a class which contains information about an entropy decoded bit sequence. 
+    /// This Component is clasified as a DCComponent.
+    /// </summary>
     public class DCComponent : EntropyValueComponent {
-        public DCComponent(SimpleBitVector16 huffmanTreePath, byte huffmanLeafHexValue, SimpleBitVector16 amplitude) 
+
+        /// <summary>
+        /// Builds an DCComponent.
+        /// </summary>
+        /// <param name="huffmanTreePath">The path through the Huffman tree</param>
+        /// <param name="huffmanLeafHexValue">The byte which was returned by Huffman tree</param>
+        /// <param name="amplitude">The bit sequence from RLE.</param>
+        public DCComponent(BitVector16 huffmanTreePath, byte huffmanLeafHexValue, BitVector16 amplitude) 
             : base(huffmanTreePath, huffmanLeafHexValue, amplitude) { }
     }
 }

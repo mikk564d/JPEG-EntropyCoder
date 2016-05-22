@@ -17,7 +17,7 @@ namespace JPEG_EntropyCoderTests {
             this.tree = new HuffmanTree(testDHT);
         }
 
-        public static SimpleBitVector16 charsToBitArray(char[] input) {
+        public static BitVector16 charsToBitArray(char[] input) {
             bool[] result = new bool[input.Length];
 
             for (int i = 0; i < input.Length; i++) {
@@ -28,10 +28,10 @@ namespace JPEG_EntropyCoderTests {
                 }
             }
 
-            return new SimpleBitVector16(result);
+            return new BitVector16(result);
         }
 
-        public static IEnumerable<Tuple<byte, SimpleBitVector16>> FindGetTestCases() {
+        public static IEnumerable<Tuple<byte, BitVector16>> FindGetTestCases() {
             string[] addrs = new string[] {
                     "07_000",
                     "08_001",
@@ -51,15 +51,15 @@ namespace JPEG_EntropyCoderTests {
                 string[] addrc = addr.Split('_');
                 char[] chars = addrc[1].ToCharArray();
                 for (int i = 0; i < chars.Length - 1; i++) {
-                  yield return new Tuple<byte, SimpleBitVector16>(0xFF, charsToBitArray(chars.Take(i).ToArray()));
+                  yield return new Tuple<byte, BitVector16>(0xFF, charsToBitArray(chars.Take(i).ToArray()));
                 }
 
-                yield return new Tuple<byte, SimpleBitVector16>(byte.Parse(addrc[0],System.Globalization.NumberStyles.HexNumber), charsToBitArray(chars));
+                yield return new Tuple<byte, BitVector16>(byte.Parse(addrc[0],System.Globalization.NumberStyles.HexNumber), charsToBitArray(chars));
             }
         }
 
         [Test, TestCaseSource("FindGetTestCases")]
-        public void FindTest(Tuple<byte, SimpleBitVector16> casetup) {
+        public void FindTest(Tuple<byte, BitVector16> casetup) {
             Assert.AreEqual(casetup.Item1, this.tree.Find(casetup.Item2), casetup.Item2.ToString());
         }
 

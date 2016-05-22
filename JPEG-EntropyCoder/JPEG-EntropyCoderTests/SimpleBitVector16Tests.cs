@@ -12,7 +12,7 @@ namespace JPEG_EntropyCoderTests
         {
             bool[] arr = {false, true, false, false, false, true, true, true};
 
-            SimpleBitVector16 v = new SimpleBitVector16(arr);
+            BitVector16 v = new BitVector16(arr);
             bool[] resultArray = new bool[8];
 
             for (byte i = 0; i < v.Length; i++)
@@ -28,7 +28,7 @@ namespace JPEG_EntropyCoderTests
         {
             bool[] arr = { false, true, false, false, false, true, true, true };
 
-            SimpleBitVector16 v = new SimpleBitVector16(arr);
+            BitVector16 v = new BitVector16(arr);
             
             Assert.AreEqual(true, v[1]);
         }
@@ -38,7 +38,7 @@ namespace JPEG_EntropyCoderTests
         {
             bool[] arr = { false, true, false, false, false, true, true, true };
 
-            SimpleBitVector16 v = new SimpleBitVector16(arr);
+            BitVector16 v = new BitVector16(arr);
 
             Assert.AreEqual(false, v[2]);
         }
@@ -48,7 +48,7 @@ namespace JPEG_EntropyCoderTests
         {
             bool[] arr = { true, true, false, true, true, true, true, true };
 
-            SimpleBitVector16 v = new SimpleBitVector16(arr);
+            BitVector16 v = new BitVector16(arr);
 
             Assert.AreEqual(false, v[2]);
         }
@@ -58,7 +58,7 @@ namespace JPEG_EntropyCoderTests
         {
             bool[] arr = { false, true, false, false, false, true, true, true };
 
-            SimpleBitVector16 v = new SimpleBitVector16(arr);
+            BitVector16 v = new BitVector16(arr);
             v[1] = false;
 
             Assert.AreEqual(false, v[1]);
@@ -69,7 +69,7 @@ namespace JPEG_EntropyCoderTests
         {
             bool[] arr = { false, true, false, false, false, true, true, true };
 
-            SimpleBitVector16 v = new SimpleBitVector16(arr);
+            BitVector16 v = new BitVector16(arr);
             v[2] = true;
 
             Assert.AreEqual(true, v[2]);

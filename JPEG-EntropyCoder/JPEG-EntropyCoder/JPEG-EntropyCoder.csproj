@@ -173,7 +173,7 @@
     <Compile Include="JPEGFileHandler.cs" />
     <Compile Include="ProgressEventArgs.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="SimpleBitVector16.cs" />
+    <Compile Include="BitVector16.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
