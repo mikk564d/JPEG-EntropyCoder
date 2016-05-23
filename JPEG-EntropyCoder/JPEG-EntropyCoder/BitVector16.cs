@@ -93,10 +93,11 @@ namespace JPEG_EntropyCoder {
             return Data == other.Data && Length == other.Length;
         }
 
-        /// <summary>Determines whether the specified object is equal to the current object.</summary>
-        /// <returns>true if the specified object  is equal to the current object; otherwise, false.</returns>
-        /// <param name="obj">The object to compare with the current object. </param>
-        /// <filterpriority>2</filterpriority>
+        /// <summary>
+        /// Returns a value indicating whether this instance is equals to <paramref name="obj"/>
+        /// </summary>
+        /// <param name="obj">Object to compare</param>
+        /// <returns>Returns true if equals</returns>
         public override bool Equals(object obj) {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
@@ -104,18 +105,20 @@ namespace JPEG_EntropyCoder {
             return Equals((BitVector16) obj);
         }
 
-        /// <summary>Serves as the default hash function. </summary>
-        /// <returns>A hash code for the current object.</returns>
-        /// <filterpriority>2</filterpriority>
+        /// <summary>
+        /// Returns the Hash Code for this instance.
+        /// </summary>
+        /// <returns>Returns the Hash Code for this instance</returns>
         public override int GetHashCode() {
             unchecked {
                 return (Data.GetHashCode()*397) ^ Length.GetHashCode();
             }
         }
 
-        /// <summary>Creates a new object that is a copy of the current instance.</summary>
-        /// <returns>A new object that is a copy of this instance.</returns>
-        /// <filterpriority>2</filterpriority>
+        /// <summary>
+        /// Clones this instance and returns an object which is identical.
+        /// </summary>
+        /// <returns>Returns an object that is identical to this</returns>
         public object Clone() {
             return new BitVector16(Data, Length);
         }
